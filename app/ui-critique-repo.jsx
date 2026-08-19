@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Upload, ArrowLeft, Check, X, Clock, Loader2, Trash2, ClipboardList, PlusCircle } from "lucide-react";
 
-const CRITERIA_VERSION = "v1.8 · 19 ago 2026";
+const CRITERIA_VERSION = "v1.11 · 19 ago 2026";
 
 // Semilla real de criterios atómicos, migrados del PDF "UX Component Critique
 // Criteria" (Open UI, WAI-ARIA APG, GOV.UK, Salesforce Lightning, Atlassian,
@@ -231,7 +231,77 @@ const SEED_CRITERIA_BATCH3 = [
   { statement: "La complejidad visual y la prototipicalidad (qué tan parecido es a lo esperado en su categoría) afectan juntas la primera impresión — layouts muy inusuales arriesgan confianza inicial, aunque luego funcionen bien.", dimension: "Jerarquía visual", core: false, contextTags: ["Marketing / landing", "Exploración / descubrimiento"], qualityScore: "9/12", evidenceTier: "alta", principle: "Tuch et al. — complejidad y prototipicalidad", sourceUrl: "https://research.google/pubs/the-role-of-visual-complexity-and-prototypicality-regarding-first-impression-of-websites-working-towards-understanding-aesthetic-judgments/" },
 ].map((c, i) => ({ id: `seed3-${String(i + 1).padStart(3, "0")}`, batch: "curation-workflow-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
 
-// Categoría 2 — Referencias visuales externas: UICrit (Google Research), filtrado
+// Cuarto lote: ronda de curación sobre WCAG 2.2 nivel AAA (v1.10).
+// ADVERTENCIA: esta ronda se hizo sin acceso de red en vivo a w3.org (bloqueado
+// por política de egress del entorno) — los números/URLs vienen de conocimiento
+// entrenado, no de una consulta verificada en esta sesión. Encuestados ~30
+// criterios AAA completos; la mayoría puntuó bajo por depender de audio/video,
+// timing o interacción de teclado (no observable desde una imagen estática) y
+// quedaron documentados en CRITERIA-BACKLOG.md sin promoverse. Recomendado:
+// spot-check manual de estas 7 entradas contra el texto oficial antes de
+// confiar en ellas al 100%. AAA es explícitamente aspiracional, no un
+// requisito universal según el propio W3C — por eso evidenceTier queda en
+// media/media-alta, no "alta" como las reglas AA ya duras del batch2.
+const SEED_CRITERIA_BATCH4 = [
+  { statement: "Para texto o contenido especialmente crítico, considerá el contraste reforzado de WCAG AAA (7:1 en texto normal, 4.5:1 en texto grande) más allá del mínimo AA.", dimension: "Color y contraste", core: false, contextTags: [], qualityScore: "12/12", evidenceTier: "media-alta", principle: "WCAG 2.2 AAA — 1.4.6 Contrast (Enhanced)", sourceUrl: "https://www.w3.org/TR/WCAG22/#contrast-enhanced" },
+  { statement: "En flujos con múltiples pasos o secciones, mostrá dónde está la persona usuaria dentro del conjunto — breadcrumb, tab activo remarcado, indicador de paso — no solo el contenido de la pantalla actual.", dimension: "Claridad del propósito", core: false, contextTags: ["Dashboard / datos densos"], qualityScore: "11/12", evidenceTier: "media-alta", principle: "WCAG 2.2 AAA — 2.4.8 Location", sourceUrl: "https://www.w3.org/TR/WCAG22/#location" },
+  { statement: "El texto de un link o botón debe describir su destino o acción por sí solo, sin depender del texto que lo rodea — evitá 'click acá' o 'ver más' sin contexto propio.", dimension: "Copy y microcopy", core: true, contextTags: [], qualityScore: "11/12", evidenceTier: "media-alta", principle: "WCAG 2.2 AAA — 2.4.9 Link Purpose (Link Only)", sourceUrl: "https://www.w3.org/TR/WCAG22/#link-purpose-link-only" },
+  { statement: "Los objetivos táctiles primarios deberían acercarse a 44×44px CSS cuando el layout lo permita, no quedarse solo en el mínimo de 24×24px de WCAG AA.", dimension: "Componentes y affordance", core: true, contextTags: [], qualityScore: "12/12", evidenceTier: "media-alta", principle: "WCAG 2.2 AAA — 2.5.5 Target Size (Enhanced)", sourceUrl: "https://www.w3.org/TR/WCAG22/#target-size-enhanced" },
+  { statement: "Un campo o paso complejo debería tener ayuda contextual visible o accesible cerca (tooltip, texto de ayuda, link a más info), no solo un label.", dimension: "Copy y microcopy", core: false, contextTags: ["Flujo transaccional"], qualityScore: "9/12", evidenceTier: "media", principle: "WCAG 2.2 AAA — 3.3.5 Help", sourceUrl: "https://www.w3.org/TR/WCAG22/#help" },
+  { statement: "Cualquier envío de formulario con datos importantes —no solo legal o financiero— debería permitir revisar, corregir o confirmar antes de enviarse en firme.", dimension: "Componentes y affordance", core: false, contextTags: ["Flujo transaccional"], qualityScore: "9/12", evidenceTier: "media", principle: "WCAG 2.2 AAA — 3.3.6 Error Prevention (All)", sourceUrl: "https://www.w3.org/TR/WCAG22/#error-prevention-all" },
+  { statement: "Un flujo de autenticación no debería exigir resolver un puzzle cognitivo (recordar una contraseña compleja, transcribir un captcha visual) sin una alternativa que no dependa de memoria o resolución de problemas — biometría, passkey, gestor de contraseñas.", dimension: "Componentes y affordance", core: false, contextTags: ["Flujo transaccional", "Onboarding"], qualityScore: "11/12", evidenceTier: "media-alta", principle: "WCAG 2.2 AAA — 3.3.9 Accessible Authentication (Enhanced)", sourceUrl: "https://www.w3.org/TR/WCAG22/#accessible-authentication-enhanced" },
+].map((c, i) => ({ id: `seed4-${String(i + 1).padStart(3, "0")}`, batch: "wcag-aaa-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
+// Grafo de criterios en conflicto (Balde 2, punto 5) — infraestructura + primera
+// pasada manual, NO generado por embeddings todavía (ver punto 4, bloqueado por
+// política de red en este entorno: api.voyageai.com no es alcanzable). Cada
+// entrada documenta una tensión real entre dos criterios que un lector rápido
+// podría leer como contradictorios si no entiende el límite de contexto entre
+// ambos. No implica que uno esté "mal" — implica que el modelo debe elegir cuál
+// aplica según el contexto real de la pantalla, no promediarlos ni ignorarlos.
+// Todavía no tiene UI propia ni se usa en el pipeline de crítica — es la base de
+// datos sobre la que construir eso próximo.
+// Quinto lote: ronda de curación sobre el catálogo de reglas determinísticas de
+// Impeccable (impeccable.style / github.com/pbakaus/impeccable, Apache 2.0) —
+// commit f88b2837a7d7c3182e46307bbbb091a1ed547571, cli/engine/rules/checks.mjs.
+// A DIFERENCIA de la ronda WCAG AAA, esta SÍ se verificó contra el código fuente
+// real (se clonó el repo, se leyó cada umbral exacto) — no es de memoria.
+// Filtro aplicado según pedido explícito de "que encaje": de las ~47 reglas
+// encuestadas, se rechazaron las que son puro patrón "esto parece IA genérica"
+// sin respaldo normativo (paleta violeta en headings, tile de ícono redondeado,
+// glow oscuro, fondo crema, chip "eyebrow" sobre hero, etc.) — evidenceTier
+// bajo, no se promovieron aunque puntuaran cerca del corte, para no tratar una
+// preferencia estética del autor de Impeccable como si fuera un criterio
+// normativo. Se promovieron solo las que tienen una razón real de legibilidad/
+// usabilidad/renderizado detrás. Detalle completo (promovidas + rechazadas con
+// puntaje) en CRITERIA-BACKLOG.md.
+const SEED_CRITERIA_BATCH5 = [
+  { statement: "Evitá texto en mayúsculas sostenidas en bloques de copy largos (>30 caracteres) — reduce la velocidad de lectura; reservalo para labels cortos o headings.", dimension: "Tipografía", core: true, contextTags: [], qualityScore: "10/12", evidenceTier: "media", principle: "Impeccable — all-caps-body", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3436" },
+  { statement: "Un contenedor con overflow oculto no debería cortar visualmente a un elemento posicionado que se sale de sus límites (badge, tooltip, dropdown parcialmente invisible).", dimension: "Componentes y affordance", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — clipped-overflow-container", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L4638" },
+  { statement: "El padding vertical y horizontal de un contenedor de texto debería escalar con el tamaño de fuente — como referencia, al menos ~0.5× el font-size en cada eje; menos que eso se lee como apretado.", dimension: "Espaciado y alineación", core: true, contextTags: [], qualityScore: "11/12", evidenceTier: "media", principle: "Impeccable — cramped-padding", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3146" },
+  { statement: "Evitá letter-spacing negativo extremo (más cerrado que -0.05em) en texto de lectura — daña la legibilidad más allá de un efecto tipográfico intencional en un título puntual.", dimension: "Tipografía", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — extreme-negative-tracking", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3459" },
+  { statement: "Si una pantalla usa 3 o más tamaños de fuente, el mayor debería ser al menos 2× el menor — una escala tipográfica demasiado plana no comunica jerarquía real entre niveles.", dimension: "Jerarquía visual", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — flat-type-hierarchy", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L4113" },
+  { statement: "Si usás texto con gradiente (background-clip: text), verificá que cada segmento del gradiente mantenga contraste suficiente contra el fondo — el extremo más claro u oscuro del gradiente puede caer por debajo del mínimo legible.", dimension: "Color y contraste", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — gradient-text", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L211" },
+  { statement: "Texto gris (sin saturación de color) sobre un fondo saturado/de color suele perder contraste real aunque a simple vista parezca legible — medí el contraste efectivo, no lo asumas por la paleta.", dimension: "Color y contraste", core: true, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — gray-on-color", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L168" },
+  { statement: "Evitá texto justificado (text-align: justify) sin hyphenation activada — sin guionado automático genera 'ríos' de espacio en blanco irregulares entre palabras.", dimension: "Tipografía", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — justified-text", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3362" },
+  { statement: "Limitá el largo de línea de párrafos de lectura a un rango legible (referencia: no más de ~75-80 caracteres por línea) — líneas más largas fuerzan al ojo a perder el renglón al saltar de línea.", dimension: "Tipografía", core: true, contextTags: [], qualityScore: "11/12", evidenceTier: "media-alta", principle: "Impeccable — line-length", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3111" },
+  { statement: "Marcadores numerados (01/02/03) sobre un conjunto de secciones solo tienen sentido si el orden es real y importa (un proceso, un ranking) — usarlos sobre contenido sin secuencia real es decoración que promete un orden que no existe.", dimension: "Claridad del propósito", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — numbered-section-labels", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L2623" },
+  { statement: "El contenido de texto no debería desbordar visualmente su contenedor (texto cortado, superpuesto, o que se sale del box) — es un defecto de renderizado observable, no una decisión de diseño.", dimension: "Componentes y affordance", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — text-overflow", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L4757" },
+  { statement: "El texto de un elemento interactivo o funcional (botón, label, badge, texto de UI) no debería caer por debajo de un piso de legibilidad mínimo — es más estricto que el texto de cuerpo general porque además hay que poder accionarlo con precisión.", dimension: "Accesibilidad", core: true, contextTags: [], qualityScore: "12/12", evidenceTier: "media-alta", principle: "Impeccable — undersized-ui-text", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3427" },
+  { statement: "El texto de cuerpo general no debería caer por debajo de un tamaño mínimo legible cómodamente sin zoom — chico para ahorrar espacio es una falsa economía si nadie puede leerlo sin esfuerzo.", dimension: "Accesibilidad", core: true, contextTags: [], qualityScore: "12/12", evidenceTier: "media-alta", principle: "Impeccable — tiny-text", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3373" },
+  { statement: "El interlineado (line-height) de párrafos largos (>50 caracteres) no debería bajar de 1.3× el tamaño de fuente — menos que eso comprime las líneas y dificulta seguir el renglón.", dimension: "Tipografía", core: true, contextTags: [], qualityScore: "11/12", evidenceTier: "media-alta", principle: "Impeccable — tight-leading", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3353" },
+  { statement: "Un bloque de texto de cuerpo no debería tocar el borde del viewport sin margen — especialmente crítico en mobile, donde el borde de pantalla es también el borde físico del dispositivo.", dimension: "Espaciado y alineación", core: false, contextTags: [], qualityScore: "10/12", evidenceTier: "media", principle: "Impeccable — body-text-viewport-edge", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3344" },
+  { statement: "Evitá letter-spacing positivo amplio (más de 0.05em) en texto de cuerpo sin mayúsculas — el tracking abierto ralentiza la lectura de párrafos normales; reservalo para labels cortos en mayúsculas.", dimension: "Tipografía", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Impeccable — wide-tracking", sourceUrl: "https://github.com/pbakaus/impeccable/blob/f88b2837a7d7c3182e46307bbbb091a1ed547571/cli/engine/rules/checks.mjs#L3445" },
+].map((c, i) => ({ id: `seed5-${String(i + 1).padStart(3, "0")}`, batch: "impeccable-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
+const CRITERION_CONFLICTS = [
+  {
+    a: "seed-002", // "No preselecciones respuestas... cuando el valor pueda sesgar"
+    b: "seed-003", // "Un select de configuración puede tener valor predeterminado..."
+    type: "limite-de-contexto",
+    note: "No es una contradicción real: seed-002 aplica a preguntas/preferencias donde preseleccionar sesga la respuesta de la persona; seed-003 aplica a configuración donde el valor por defecto representa el estado real del sistema (no una opinión). El modelo debe distinguir 'pregunta' de 'estado del sistema' antes de aplicar cualquiera de las dos.",
+  },
+];
 // a comments_source "human" o "both" únicamente (se excluyó "llm" — 1.058 de 11.344
 // comentarios). Namespace separado (external-reference:) — nunca se mezcla con
 // criterion: (documentación) ni con critique: (nuestro corpus propio aprobado).
@@ -3222,10 +3292,14 @@ function seedCriteriaIfNeeded(existingKeys) {
   const batch1Done = existingKeys.some((k) => k.startsWith("criterion:seed-"));
   const batch2Done = existingKeys.some((k) => k.startsWith("criterion:seed2-"));
   const batch3Done = existingKeys.some((k) => k.startsWith("criterion:seed3-"));
+  const batch4Done = existingKeys.some((k) => k.startsWith("criterion:seed4-"));
+  const batch5Done = existingKeys.some((k) => k.startsWith("criterion:seed5-"));
   const writes = [];
   if (!batch1Done) writes.push(...SEED_CRITERIA.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!batch2Done) writes.push(...SEED_CRITERIA_BATCH2.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!batch3Done) writes.push(...SEED_CRITERIA_BATCH3.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch4Done) writes.push(...SEED_CRITERIA_BATCH4.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch5Done) writes.push(...SEED_CRITERIA_BATCH5.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!writes.length) return Promise.resolve(false);
   return Promise.all(writes).then(() => true);
 }
@@ -3490,9 +3564,9 @@ Reglas generales:
 - No incluyas nada fuera del objeto JSON.`;
 
 const SEVERITY_STYLES = {
-  alta: { bg: "#F3E1DE", fg: "#93312A", border: "#C0392B", label: "Alta" },
-  media: { bg: "#F3ECDA", fg: "#7A5A17", border: "#B8860B", label: "Media" },
-  baja: { bg: "#E3E9E4", fg: "#3E5347", border: "#5B7065", label: "Baja" },
+  alta: { bg: "#FDECEA", fg: "#B4362A", border: "#E8998F", label: "Alta" },
+  media: { bg: "#FEF3E2", fg: "#966016", border: "#F0C374", label: "Media" },
+  baja: { bg: "#EEF0F2", fg: "#52606d", border: "#c7cfd6", label: "Baja" },
 };
 
 const CRITERIA_SECTIONS = [
@@ -3592,11 +3666,11 @@ function resizeImageFile(file, maxWidth = 1100, quality = 0.82) {
 }
 
 const TYPE_STYLES = {
-  violacion: { label: "Violación", bg: "#F3E1DE", fg: "#93312A" },
-  riesgo: { label: "Riesgo", bg: "#F3ECDA", fg: "#7A5A17" },
-  hipotesis: { label: "Hipótesis", bg: "#E7E4EF", fg: "#5B4E86" },
-  convencion: { label: "Convención", bg: "#DCE4E1", fg: "#2B4C4F" },
-  preferencia: { label: "Preferencia", bg: "#E3E9E4", fg: "#3E5347" },
+  violacion: { label: "Violación", bg: "#FDECEA", fg: "#B4362A" },
+  riesgo: { label: "Riesgo", bg: "#FEF3E2", fg: "#966016" },
+  hipotesis: { label: "Hipótesis", bg: "#EEEBFD", fg: "#5B45E0" },
+  convencion: { label: "Convención", bg: "#E8F5EE", fg: "#1E7A4C" },
+  preferencia: { label: "Preferencia", bg: "#EEF0F2", fg: "#52606d" },
 };
 
 function TypeTag({ type }) {
@@ -3607,10 +3681,10 @@ function TypeTag({ type }) {
 
 function StatusStamp({ status, size = "md" }) {
   const cfg = {
-    approved: { text: "APROBADO", color: "#2B4C4F" },
-    rejected: { text: "RECHAZADO", color: "#93312A" },
-    pending: { text: "PENDIENTE", color: "#8A7F6A" },
-  }[status] || { text: "PENDIENTE", color: "#8A7F6A" };
+    approved: { text: "APROBADO", color: "#1E7A4C" },
+    rejected: { text: "RECHAZADO", color: "#B4362A" },
+    pending: { text: "PENDIENTE", color: "#8a8f98" },
+  }[status] || { text: "PENDIENTE", color: "#8a8f98" };
   return (
     <span
       className={`stamp stamp-${size}`}
@@ -3895,7 +3969,7 @@ function NewView({ onSaved, onCancel }) {
       const base64 = preview.split(",")[1];
 
       // Paso 1: clasificación barata (screenType, componentes visibles, plataforma)
-      const classifyRes = await fetch("https://api.anthropic.com/v1/messages", {
+      const classifyRes = await fetch("/api/critique", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3934,7 +4008,7 @@ function NewView({ onSaved, onCancel }) {
 
       // Paso 3: crítica real, con solo los criterios y ejemplos relevantes inyectados
       setAnalyzeStage("Generando la crítica…");
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/critique", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -4310,204 +4384,262 @@ export default function UICritiqueRepo() {
     <div className="app">
       <style>{`
         .app {
-          --ink: #23281f;
-          --paper: #EEF0E9;
-          --paper-raised: #F7F8F3;
-          --rule: #C9CDBF;
-          --accent: #2B4C4F;
-          --accent-soft: #DCE4E1;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          --ink: #18181b;
+          --ink-soft: #52525b;
+          --ink-faint: #a1a1aa;
+          --paper: #fafafa;
+          --paper-raised: #ffffff;
+          --paper-sunken: #f4f4f5;
+          --rule: rgba(24, 24, 27, 0.09);
+          --rule-strong: rgba(24, 24, 27, 0.16);
+          --accent: #5b45e0;
+          --accent-fg: #ffffff;
+          --accent-soft: #eeebfd;
+          --accent-soft-fg: #4c3aca;
+          --danger: #c0392b;
+          --danger-soft: #fdecea;
+          --danger-soft-fg: #a5301f;
+          --success-soft: #e7f5ee;
+          --success-soft-fg: #1e7a4c;
+          --radius-sm: 8px;
+          --radius-md: 12px;
+          --radius-lg: 16px;
+          --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.05);
+          --shadow-sm: 0 1px 3px rgba(24, 24, 27, 0.07), 0 1px 2px rgba(24, 24, 27, 0.04);
+          --shadow-md: 0 4px 14px rgba(24, 24, 27, 0.08), 0 1px 3px rgba(24, 24, 27, 0.05);
+          font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+          -webkit-font-smoothing: antialiased;
           background: var(--paper);
           color: var(--ink);
           min-height: 100%;
-          padding: 28px 24px 48px;
+          padding: 32px 28px 56px;
           box-sizing: border-box;
+          font-size: 14px;
+          line-height: 1.45;
+        }
+        @media (prefers-color-scheme: dark) {
+          .app {
+            --ink: #f4f4f5;
+            --ink-soft: #a1a1aa;
+            --ink-faint: #71717a;
+            --paper: #101012;
+            --paper-raised: #18181b;
+            --paper-sunken: #202023;
+            --rule: rgba(244, 244, 245, 0.09);
+            --rule-strong: rgba(244, 244, 245, 0.16);
+            --accent: #8b7cf6;
+            --accent-fg: #101012;
+            --accent-soft: rgba(139, 124, 246, 0.16);
+            --accent-soft-fg: #c1b6fb;
+            --danger: #f0685a;
+            --danger-soft: rgba(240, 104, 90, 0.14);
+            --danger-soft-fg: #ff9186;
+            --success-soft: rgba(52, 199, 130, 0.14);
+            --success-soft-fg: #5fd6a2;
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+          }
         }
         .app * { box-sizing: border-box; }
         .app h1, .app h2, .app h3 {
-          font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+          font-family: inherit;
+          font-weight: 650;
+          letter-spacing: -0.015em;
           margin: 0;
         }
         .masthead {
           display: flex; justify-content: space-between; align-items: flex-end;
-          border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 22px;
+          border-bottom: 1px solid var(--rule); padding-bottom: 18px; margin-bottom: 26px;
         }
-        .masthead h1 { font-size: 26px; letter-spacing: -0.01em; }
+        .masthead h1 { font-size: 21px; }
         .masthead .eyebrow {
-          font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-          color: var(--accent); font-weight: 600; margin-bottom: 4px;
+          font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+          color: var(--accent); font-weight: 650; margin-bottom: 6px;
         }
-        .masthead .kicker { font-size: 12px; color: #6b7268; margin-top: 4px; }
-        .section-title { font-size: 19px; }
-        .section-sub { font-size: 13px; color: #6b7268; margin: 6px 0 0; }
-        .index-toolbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+        .masthead .kicker { font-size: 13px; color: var(--ink-soft); margin-top: 5px; }
+        .section-title { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
+        .section-sub { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; }
+        .index-toolbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
         .btn {
           display: inline-flex; align-items: center; gap: 6px;
-          font-size: 13px; font-weight: 600; padding: 9px 14px;
-          border-radius: 3px; border: 1px solid var(--ink); cursor: pointer;
+          font-size: 13px; font-weight: 600; padding: 8px 14px;
+          border-radius: var(--radius-sm); border: 1px solid var(--rule-strong); cursor: pointer;
           background: var(--paper-raised); color: var(--ink);
-          transition: transform 0.08s ease;
+          box-shadow: var(--shadow-xs);
+          transition: background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
         }
-        .btn:hover:not(:disabled) { transform: translateY(-1px); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-primary { background: var(--ink); color: var(--paper-raised); border-color: var(--ink); }
-        .btn-secondary { background: transparent; }
+        .btn:hover:not(:disabled) { background: var(--paper-sunken); box-shadow: var(--shadow-sm); }
+        .btn:active:not(:disabled) { transform: translateY(0.5px); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+        .btn-primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); box-shadow: var(--shadow-sm); }
+        .btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.06); box-shadow: var(--shadow-md); }
+        .btn-secondary { background: transparent; box-shadow: none; }
+        .btn-secondary:hover:not(:disabled) { background: var(--paper-sunken); }
         .btn-block { width: 100%; justify-content: center; margin-top: 4px; }
-        .btn-approve { background: #E4EBE4; border-color: #2B4C4F; color: #2B4C4F; }
-        .btn-reject { background: #F3E1DE; border-color: #93312A; color: #93312A; }
+        .btn-approve { background: var(--success-soft); border-color: transparent; color: var(--success-soft-fg); box-shadow: none; }
+        .btn-reject { background: var(--danger-soft); border-color: transparent; color: var(--danger-soft-fg); box-shadow: none; }
         .btn-link {
           background: none; border: none; cursor: pointer; font-size: 12.5px;
           color: var(--accent); display: inline-flex; align-items: center; gap: 4px;
-          padding: 0; font-weight: 600; margin-bottom: 14px;
+          padding: 0; font-weight: 600; margin-bottom: 16px;
         }
-        .btn-link.danger { color: #93312A; }
+        .btn-link:hover { opacity: 0.8; }
+        .btn-link.danger { color: var(--danger); }
         .empty-state {
-          border: 1px dashed var(--rule); border-radius: 4px; padding: 48px 20px;
+          border: 1px dashed var(--rule-strong); border-radius: var(--radius-md); padding: 52px 20px;
           display: flex; flex-direction: column; align-items: center; gap: 10px;
-          color: #6b7268; font-size: 14px; text-align: center;
+          color: var(--ink-soft); font-size: 14px; text-align: center; background: var(--paper-raised);
         }
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .index-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .index-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
         .index-table thead th {
-          text-align: left; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
-          color: #6b7268; border-bottom: 1px solid var(--ink); padding: 0 10px 8px;
-          font-weight: 600;
+          text-align: left; font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase;
+          color: var(--ink-faint); border-bottom: 1px solid var(--rule); padding: 0 10px 10px;
+          font-weight: 650;
         }
-        .index-table tbody tr { cursor: pointer; border-bottom: 1px solid var(--rule); }
-        .index-table tbody tr:hover { background: var(--paper-raised); }
-        .index-table td { padding: 10px; vertical-align: middle; }
+        .index-table tbody tr { cursor: pointer; border-bottom: 1px solid var(--rule); transition: background 0.1s ease; }
+        .index-table tbody tr:hover { background: var(--paper-sunken); }
+        .index-table td { padding: 12px 10px; vertical-align: middle; }
         .thumb-cell { width: 56px; }
-        .thumb { width: 48px; height: 34px; object-fit: cover; border-radius: 2px; border: 1px solid var(--rule); display: block; }
+        .thumb { width: 48px; height: 34px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--rule); display: block; }
         .title-cell { font-weight: 600; }
-        .muted { color: #6b7268; }
+        .muted { color: var(--ink-soft); }
         .small { font-size: 11.5px; }
         .score-pill {
           font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px;
-          background: var(--accent-soft); color: var(--accent); padding: 3px 7px; border-radius: 3px;
+          background: var(--accent-soft); color: var(--accent-soft-fg); padding: 3px 8px; border-radius: 20px;
+          font-weight: 600;
         }
-        .score-pill-fail { background: #F3E1DE; color: #93312A; font-weight: 700; }
+        .score-pill-fail { background: var(--danger-soft); color: var(--danger-soft-fg); font-weight: 700; }
         .stamp {
-          display: inline-block; border: 2px solid; border-radius: 3px;
+          display: inline-block; border: 1.5px solid; border-radius: 20px;
           font-family: "SF Mono", Menlo, Consolas, monospace; font-weight: 700;
-          letter-spacing: 0.06em; transform: rotate(-3deg); opacity: 0.9;
+          letter-spacing: 0.04em; opacity: 0.95;
         }
-        .stamp-sm { font-size: 9px; padding: 2px 6px; }
-        .stamp-lg { font-size: 13px; padding: 6px 12px; }
+        .stamp-sm { font-size: 9px; padding: 2px 8px; }
+        .stamp-lg { font-size: 12px; padding: 5px 12px; }
         .new-view, .detail-view { max-width: 100%; }
-        .form-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; margin-top: 18px; }
+        .form-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; margin-top: 20px; }
         .upload-zone {
-          display: block; border: 1.5px dashed var(--rule); border-radius: 4px;
+          display: block; border: 1.5px dashed var(--rule-strong); border-radius: var(--radius-md);
           min-height: 260px; cursor: pointer; overflow: hidden; background: var(--paper-raised);
+          transition: border-color 0.12s ease;
         }
-        .upload-zone.has-image { border-style: solid; }
+        .upload-zone:hover { border-color: var(--accent); }
+        .upload-zone.has-image { border-style: solid; border-color: var(--rule); }
         .upload-placeholder {
           display: flex; flex-direction: column; align-items: center; justify-content: center;
-          gap: 8px; height: 260px; color: #6b7268; font-size: 13px; text-align: center; padding: 0 20px;
+          gap: 8px; height: 260px; color: var(--ink-soft); font-size: 13px; text-align: center; padding: 0 20px;
         }
-        .preview-img { width: 100%; height: 260px; object-fit: contain; background: #fff; }
-        .field-col { display: flex; flex-direction: column; gap: 12px; }
-        .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #6b7268; }
+        .preview-img { width: 100%; height: 260px; object-fit: contain; background: var(--paper-sunken); }
+        .field-col { display: flex; flex-direction: column; gap: 14px; }
+        .field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
         .field input, .field textarea {
-          font-family: inherit; font-size: 14px; padding: 9px 10px; border-radius: 3px;
-          border: 1px solid var(--rule); background: var(--paper-raised); color: var(--ink);
-          font-weight: 400;
+          font-family: inherit; font-size: 14px; padding: 9px 11px; border-radius: var(--radius-sm);
+          border: 1px solid var(--rule-strong); background: var(--paper-raised); color: var(--ink);
+          font-weight: 400; transition: border-color 0.12s ease, box-shadow 0.12s ease;
         }
-        .field input:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-        .error-text { color: #93312A; font-size: 12.5px; }
+        .field input:focus, .field textarea:focus {
+          outline: none; border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+        .error-text { color: var(--danger); font-size: 12.5px; }
         .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
         .tag-chip {
-          font-size: 11.5px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
-          border: 1px solid var(--rule); background: var(--paper-raised); color: #6b7268;
-          cursor: pointer;
+          font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 20px;
+          border: 1px solid var(--rule-strong); background: var(--paper-raised); color: var(--ink-soft);
+          cursor: pointer; transition: all 0.1s ease;
         }
-        .tag-chip.active { background: var(--accent); border-color: var(--accent); color: var(--paper-raised); }
-        .tag-chip.static { cursor: default; background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+        .tag-chip:hover { border-color: var(--accent); color: var(--accent); }
+        .tag-chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+        .tag-chip.static { cursor: default; background: var(--accent-soft); color: var(--accent-soft-fg); border-color: transparent; }
         .fail-banner {
-          background: #F3E1DE; border: 1px solid #C0392B; color: #6b241f;
-          border-radius: 4px; padding: 10px 12px; font-size: 13px; line-height: 1.5;
-          margin-bottom: 14px;
+          background: var(--danger-soft); border: 1px solid transparent; color: var(--danger-soft-fg);
+          border-radius: var(--radius-md); padding: 12px 14px; font-size: 13px; line-height: 1.5;
+          margin-bottom: 16px;
         }
-        .fail-banner strong { color: #93312A; letter-spacing: 0.03em; }
-        .blocks-summary { display: flex; gap: 18px; align-items: flex-start; padding-bottom: 14px; border-bottom: 1px solid var(--rule); margin-bottom: 4px; }
+        .fail-banner strong { color: var(--danger); letter-spacing: 0.02em; }
+        .blocks-summary { display: flex; gap: 18px; align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid var(--rule); margin-bottom: 4px; }
         .total-score-block {
-          font-family: "Iowan Old Style", Palatino, Georgia, serif; line-height: 1;
-          background: var(--ink); color: var(--paper-raised); border-radius: 4px;
-          padding: 12px 14px; text-align: center; min-width: 66px;
+          line-height: 1;
+          background: var(--ink); color: var(--paper); border-radius: var(--radius-md);
+          padding: 12px 14px; text-align: center; min-width: 66px; box-shadow: var(--shadow-sm);
         }
-        .block-bars { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+        .block-bars { flex: 1; display: flex; flex-direction: column; gap: 9px; padding-top: 4px; }
         .score-bar-row { font-size: 11.5px; }
-        .score-bar-label { display: flex; justify-content: space-between; margin-bottom: 3px; font-weight: 600; }
-        .score-bar-track { height: 6px; background: var(--rule); border-radius: 4px; overflow: hidden; }
-        .score-bar-fill { height: 100%; border-radius: 4px; }
+        .score-bar-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: 600; }
+        .score-bar-track { height: 6px; background: var(--paper-sunken); border-radius: 20px; overflow: hidden; }
+        .score-bar-fill { height: 100%; border-radius: 20px; }
         .block-tag {
           font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9.5px;
-          background: var(--accent-soft); color: var(--accent); padding: 1px 5px;
-          border-radius: 3px; margin-right: 6px; font-weight: 700;
+          background: var(--accent-soft); color: var(--accent-soft-fg); padding: 1px 6px;
+          border-radius: 20px; margin-right: 6px; font-weight: 700;
         }
         .detail-toolbar { display: flex; justify-content: space-between; align-items: center; }
-        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 12px; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 26px; }
+        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; gap: 12px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 28px; }
         .detail-image-col { position: sticky; top: 0; }
-        .detail-img { width: 100%; border: 1px solid var(--rule); border-radius: 4px; display: block; }
+        .detail-img { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius-md); display: block; box-shadow: var(--shadow-sm); }
         .report-summary {
-          display: flex; gap: 16px; align-items: flex-start; padding-bottom: 16px;
-          border-bottom: 1px solid var(--rule); margin-bottom: 16px;
+          display: flex; gap: 16px; align-items: flex-start; padding-bottom: 18px;
+          border-bottom: 1px solid var(--rule); margin-bottom: 18px;
         }
         .score-block {
-          font-family: "Iowan Old Style", Palatino, Georgia, serif; line-height: 1;
-          background: var(--accent); color: var(--paper-raised); border-radius: 4px;
-          padding: 10px 12px; text-align: center; min-width: 56px;
+          line-height: 1;
+          background: var(--accent); color: var(--accent-fg); border-radius: var(--radius-md);
+          padding: 10px 12px; text-align: center; min-width: 56px; box-shadow: var(--shadow-sm);
         }
-        .score-number { font-size: 26px; font-weight: 700; }
-        .score-max { font-size: 12px; opacity: 0.8; }
-        .summary-text { font-size: 14.5px; line-height: 1.5; margin: 0; padding-top: 4px; }
-        .findings-title { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: #6b7268; margin-bottom: 10px; }
-        .findings-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
-        .finding-row { border-left: 3px solid; background: var(--paper-raised); padding: 10px 12px; border-radius: 0 3px 3px 0; }
-        .finding-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .score-number { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+        .score-max { font-size: 12px; opacity: 0.85; }
+        .summary-text { font-size: 14.5px; line-height: 1.55; margin: 0; padding-top: 4px; }
+        .findings-title { font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); font-weight: 650; margin-bottom: 12px; }
+        .findings-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+        .finding-row { border: 1px solid var(--rule); border-left: 3px solid; background: var(--paper-raised); padding: 12px 14px; border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }
+        .finding-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
         .finding-category { font-size: 12.5px; font-weight: 700; }
-        .severity-badge { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px; border: 1px solid; }
+        .severity-badge { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid; }
         .finding-principle {
           font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 10.5px;
-          color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em;
+          color: var(--accent); text-transform: uppercase; letter-spacing: 0.03em;
           margin: 0;
         }
-        .finding-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+        .finding-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
         .type-tag {
-          font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px;
+          font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
         }
         .confidence-tag {
-          font-size: 10.5px; color: #6b7268; font-style: italic;
+          font-size: 10.5px; color: var(--ink-faint); font-style: italic;
         }
         .validation-note {
-          font-size: 12.5px; margin: 6px 0 0; line-height: 1.4; padding: 6px 8px;
-          background: #E7E4EF; border-radius: 3px; color: #4a3f70;
+          font-size: 12.5px; margin: 8px 0 0; line-height: 1.45; padding: 8px 10px;
+          background: var(--paper-sunken); border-radius: var(--radius-sm); color: var(--ink-soft);
         }
-        .finding-issue { font-size: 13.5px; margin: 0 0 4px; line-height: 1.4; }
-        .finding-rec { font-size: 13px; margin: 0; line-height: 1.4; }
-        .review-box { border-top: 1px solid var(--ink); padding-top: 16px; }
-        .review-fields { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; margin-bottom: 12px; }
+        .finding-issue { font-size: 13.5px; margin: 0 0 4px; line-height: 1.45; }
+        .finding-rec { font-size: 13px; margin: 0; line-height: 1.45; color: var(--ink-soft); }
+        .review-box { border-top: 1px solid var(--rule); padding-top: 18px; }
+        .review-fields { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; margin-bottom: 14px; }
         .review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .masthead-actions { display: flex; gap: 8px; }
         .criteria-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
         .version-tag {
           font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 10.5px;
-          background: var(--accent-soft); color: var(--accent); padding: 3px 8px; border-radius: 20px;
+          background: var(--accent-soft); color: var(--accent-soft-fg); padding: 3px 9px; border-radius: 20px;
         }
-        .criteria-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
-        .score-system-box { background: var(--paper-raised); border: 1px solid var(--ink); border-radius: 4px; padding: 14px 16px; margin-top: 18px; }
+        .criteria-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+        .score-system-box { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--radius-md); padding: 16px 18px; margin-top: 20px; box-shadow: var(--shadow-xs); }
         .score-system-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 12.5px; margin-top: 8px; }
         .score-system-grid strong { font-family: "SF Mono", Menlo, Consolas, monospace; color: var(--accent); }
         .type-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .component-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
         .backlog-cta {
-          border: 1.5px dashed var(--ink); border-radius: 4px; padding: 14px 16px;
-          margin-top: 20px; background: var(--paper-raised);
+          border: 1.5px dashed var(--rule-strong); border-radius: var(--radius-md); padding: 16px 18px;
+          margin-top: 22px; background: var(--paper-raised);
         }
-        .criteria-card { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: 4px; padding: 12px 14px; }
-        .criteria-card-title { font-size: 13px; margin: 0 0 8px; font-family: "Iowan Old Style", Palatino, Georgia, serif; }
-        .criteria-list { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.6; color: #3b4038; }
+        .criteria-card { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-xs); }
+        .criteria-card-title { font-size: 13px; margin: 0 0 8px; font-weight: 650; }
+        .criteria-list { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.65; color: var(--ink-soft); }
         @media (max-width: 900px) {
           .criteria-grid { grid-template-columns: 1fr 1fr; }
         }

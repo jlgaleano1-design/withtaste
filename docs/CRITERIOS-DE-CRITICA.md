@@ -1,6 +1,6 @@
 # Criterio de crítica de UI — Bitácora de Crítica UI
 
-**Versión:** 1.9 · **Última actualización:** 19 de agosto de 2026
+**Versión:** 1.11 · **Última actualización:** 19 de agosto de 2026
 **Estado:** vivo — se actualiza cada vez que el equipo aprueba sumar o ajustar una fuente.
 
 Este documento es la fuente de verdad de qué principios usa Claude para evaluar cada
@@ -11,19 +11,24 @@ comportamiento real coincida con lo documentado acá.
 
 ---
 
-## Estado del MVP (v1.9 — consolidado)
+## Estado del MVP (v1.11 — consolidado)
 
 **MVP funcional de punta a punta**, con 4 capas de conocimiento activas antes de
-cada crítica. Flujo: subir → clasificar pantalla → matchear documentación (175
+cada crítica. Flujo: subir → clasificar pantalla → matchear documentación (179
 criterios) + referencias externas de UICrit (mobile-only) + críticas propias ya
 aprobadas → generar crítica con blocks/tipos epistémicos/fallo crítico → revisar
 humano → aprobar (lo cual retroalimenta la próxima crítica).
 
 **Contenido base:**
-- 175 criterios de documentación (categoría 1), curados con workflow de puntaje
-  ≥9/12 — 65 biblioteca de componentes + 110 de escalado (WCAG, Nielsen, dark
-  patterns, i18n, IA, data viz, estética). Backlog de candidatos evaluados y no
-  promovidos en `CRITERIA-BACKLOG.md`.
+- **179 criterios de documentación (categoría 1)**, curados con workflow de
+  puntaje ≥9/12 — 70 biblioteca de componentes (batch1) + 57 de escalado inicial
+  (batch2) + 29 de la primera ronda de curación (batch3) + 7 de WCAG 2.2 AAA
+  (batch4, v1.10) + 16 del catálogo de reglas de Impeccable (batch5, v1.11,
+  verificado contra el código fuente real, no de memoria). Este número (179) es
+  el conteo real verificado contra el código (`SEED_CRITERIA*.length` en el
+  `.jsx`) — versiones anteriores de este documento decían 175, que no coincidía
+  con lo efectivamente sembrado; se corrige acá para que la doc no mienta.
+  Backlog de candidatos evaluados y no promovidos en `CRITERIA-BACKLOG.md`.
 - 151 pantallas / 547 comentarios de UICrit (categoría 2), filtrados a `human`+`both`
   (10.286 de 11.344 elegibles en el dataset completo, preservado en
   `docs/research/uicrit-filtered-human-both.json`). Uso gateado a mobile-only.
@@ -295,6 +300,7 @@ El corpus original con las reglas completas se conserva en
 | IBM Carbon Design System | Guía de plataforma (enterprise / datos densos) | Gratis, oficial |
 | Shopify Polaris | Guía de plataforma (producto de conversión, voz y tono) | Gratis, oficial |
 | `ehmo/platform-design-skills` (GitHub) | Repo open source, no importado literalmente todavía | Open source |
+| Impeccable (impeccable.style / `pbakaus/impeccable`) | Skill de diseño para agentes de código, 47 reglas determinísticas evaluadas en v1.11 | Open source (Apache 2.0) |
 
 *Nota:* de los libros con derechos de autor, se aplican los **principios/conceptos**
 (que no son propiedad de nadie), nunca se reproduce texto textual de esas obras.
@@ -396,17 +402,20 @@ JSON plano ya no permita.
 
 ---
 
-## 🔵 BALDE 2 — CTA para el futuro (avance real en v1.8)
+## 🔵 BALDE 2 — CTA para el futuro (avance real en v1.11)
 
-- 🟡 **Base de criterios atómicos** — de 65 a **175 registros** (65 biblioteca de
-  componentes + 80 de escalado inicial + 30 de la primera ronda del workflow de
-  curación). Objetivo original: 1.500-2.000. **Se adoptó un workflow de curación en
-  vez de perseguir el número a la fuerza** (ver `CRITERIA-BACKLOG.md`): encuestar el
-  universo completo de cada fuente, puntuar cada candidato 1-3 en observabilidad /
-  evidencia / aplicabilidad mobile / accionabilidad (máx 12), y promover solo lo que
-  puntúa ≥9/12. Lo que no pasa el corte queda documentado en el backlog, no se
-  pierde. Cada ronda de este tamaño suma ~25-35 criterios reales — llegar a
-  1.500-2.000 con este rigor son varias decenas de rondas, no una sola sesión.
+- 🟡 **Base de criterios atómicos** — de 65 a **179 registros reales**
+  (verificado contra el código: 70 biblioteca de componentes + 57 de escalado
+  inicial + 29 de la primera ronda del workflow de curación + 7 de WCAG 2.2 AAA
+  (v1.10) + 16 del catálogo de reglas de Impeccable (v1.11)). Objetivo
+  original: 1.500-2.000. **Se adoptó un workflow de curación en vez de
+  perseguir el número a la fuerza** (ver `CRITERIA-BACKLOG.md`): encuestar el
+  universo completo de cada fuente, puntuar cada candidato 1-3 en
+  observabilidad / evidencia / aplicabilidad mobile / accionabilidad (máx 12), y
+  promover solo lo que puntúa ≥9/12. Lo que no pasa el corte queda documentado
+  en el backlog, no se pierde. Cada ronda de este tamaño suma ~7-35 criterios
+  reales — llegar a 1.500-2.000 con este rigor son varias decenas de rondas, no
+  una sola sesión.
 - ✅ **Retrieval antes de generar** — funcionando, ahora con tres tipos de
   contenido: criterios "core" (WCAG/Nielsen fundamentales, siempre elegibles),
   criterios por tag de contexto (dark patterns, i18n, IA, data viz, estética — solo
@@ -417,11 +426,25 @@ JSON plano ya no permita.
   la app; dataset completo filtrado preservado en `docs/research/`.
 - ✅ **Circulo de alimentación de categoría 3** — construido y funcionando (ver
   sección de categorías arriba). Solo críticas propias aprobadas por un humano.
-- ⏳ **RAG semántico real** (embeddings + vector store) — no arrancado. Solo
-  necesario si el volumen crece tanto que el filtrado por tags deja de alcanzar.
-  Requiere backend propio — ya no entra en un artefacto de Claude.ai.
-- ⏳ **Grafo de criterios relacionados/en conflicto** — no arrancado. Depende de
-  tener volumen suficiente en el punto 1 para que aparezcan solapamientos reales.
+- 🔴 **RAG semántico real** (embeddings + vector store) — **replanteado en
+  v1.10, luego bloqueado por red.** La premisa de "necesita backend propio" no
+  era del todo cierta: al volumen actual (163 criterios) se puede precalcular un
+  embedding por criterio UNA vez y guardarlo como dato estático, y comparar por
+  similaridad coseno en JS puro al momento de la crítica — sin vector DB, sin
+  servidor. Se probó con una API key real de Voyage AI (partner de embeddings de
+  Anthropic) y **`api.voyageai.com` está bloqueado por la política de egress de
+  red de este entorno de ejecución** (403 en el CONNECT). No es un problema de
+  la key ni del diseño — hace falta habilitar ese host a nivel de organización,
+  o generar los embeddings desde otro entorno con acceso real a internet. El
+  script de generación (`scripts/generate-embeddings.mjs`) y la función de
+  similaridad coseno ya están escritos y listos para correr en cuanto haya
+  acceso — ver `scripts/generate-embeddings.mjs` y su comentario de cabecera.
+- 🟡 **Grafo de criterios relacionados/en conflicto** — infraestructura creada
+  en v1.10 (`CRITERION_CONFLICTS` en el `.jsx`), con una primera entrada real
+  documentada a mano (seed-002 vs seed-003 — ver historial de versiones). Sin
+  generación automática todavía (dependía del RAG semántico de arriba para
+  sugerir candidatos, que está bloqueado) y sin UI propia para verlo/editarlo —
+  próximo paso cuando se retome el punto anterior.
 - ⏳ **Fine-tuning / preference learning** — Anthropic no ofrece fine-tuning público
   de Claude vía API estándar (solo acuerdos empresariales). Alternativa realista:
   few-shot con los datos de revisión humana que ya guardamos (`reviewedBy`,
@@ -449,6 +472,48 @@ atómico, arquitectura de sistema completa). Documento producido por otro agente
 ---
 
 ## Historial de versiones
+- **v1.11 (19 ago 2026):** ronda de curación sobre el catálogo de reglas
+  determinísticas de Impeccable (impeccable.style /
+  github.com/pbakaus/impeccable, Apache 2.0, skill de diseño para agentes de
+  código). **A diferencia de la ronda WCAG AAA, esta sí se verificó contra el
+  código fuente real** — se clonó el repo y se leyó el umbral exacto de cada
+  regla en `cli/engine/rules/checks.mjs`, cada URL de origen apunta a la línea
+  real en GitHub. Se evaluó explícitamente si Impeccable "encaja" como fuente
+  antes de sumar nada (pedido directo del equipo): se descartó poder "correr"
+  la herramienta dentro de la Bitácora (necesita código fuente + servidor vivo
+  + navegador automatizado; nuestra app solo recibe una captura estática, nunca
+  el código), pero su catálogo de 47 reglas sí sirvió como fuente para el mismo
+  workflow de curación de siempre. De esas 47, se promovieron **16** (≥9/12) —
+  todas con una razón real de legibilidad/contraste/renderizado detrás
+  (tamaño mínimo de texto funcional, interlineado, largo de línea, contraste
+  de texto gris sobre color, desborde de texto, etc.). Se rechazaron a
+  propósito las reglas que son puro patrón "esto parece IA genérica" sin
+  respaldo normativo (paleta violeta en headings, tile de ícono redondeado,
+  glow oscuro, fondo crema, chip "eyebrow" sobre hero) — tratarlas como
+  criterio normativo habría violado la regla de no confundir preferencia del
+  autor de una herramienta con principio de diseño establecido. Base total:
+  163 → **179**. Detalle completo (promovidas + rechazadas con puntaje) en
+  `CRITERIA-BACKLOG.md`.
+- **v1.10 (19 ago 2026):** avance paralelo en 3 frentes de Balde 2. (1) Ronda de
+  curación sobre WCAG 2.2 nivel AAA: ~30 criterios encuestados, 7 promovidos
+  (≥9/12) — contraste reforzado, indicador de ubicación en flujos, propósito de
+  link autodescriptivo, target size 44×44, ayuda contextual, prevención de
+  errores extendida, autenticación sin puzzle cognitivo. El resto documentado en
+  `CRITERIA-BACKLOG.md` con su puntaje. **Advertencia real:** esta ronda no tuvo
+  acceso de red en vivo a w3.org (bloqueado por política de egress del entorno
+  de ejecución) — los números/URLs vienen de conocimiento entrenado, no de
+  verificación en esta sesión; pendiente un spot-check manual. (2) Grafo de
+  criterios en conflicto: infraestructura creada (`CRITERION_CONFLICTS` en el
+  `.jsx`) con una primera entrada real documentada (seed-002 vs seed-003, límite
+  de contexto entre "no preselecciones en preguntas" y "un default de config
+  puede reflejar estado real"). Sin UI propia todavía, sin generación
+  automática. (3) RAG semántico real: **bloqueado en este entorno** — se probó
+  una API key de Voyage AI real, pero `api.voyageai.com` está bloqueado por la
+  política de egress de red de esta sesión (403 en el CONNECT, mismo bloqueo
+  que sufrió w3.org). No es un problema de la key ni del código: hace falta que
+  un administrador habilite ese host, o generar los embeddings desde otro
+  entorno con acceso real. Ver sección "RAG semántico real" más abajo para el
+  plan técnico ya diseñado, listo para ejecutar en cuanto haya acceso.
 - **v1.9 (19 ago 2026):** primera ronda del workflow de curación para escalar la
   base de criterios — se encuestaron ~55 candidatos nuevos, se puntuaron con la
   rúbrica de 4 ejes (observabilidad/evidencia/aplicabilidad mobile/accionabilidad,
