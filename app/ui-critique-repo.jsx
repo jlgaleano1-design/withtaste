@@ -4013,7 +4013,7 @@ function NewView({ onSaved, onCancel }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 1000,
+          max_tokens: 4096,
           system: RUBRIC_PROMPT + dynamicSupplement + pastSupplement + externalSupplement,
           messages: [
             {

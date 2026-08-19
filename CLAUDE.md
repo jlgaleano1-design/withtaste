@@ -50,8 +50,16 @@ artefacto de Claude.ai con storage compartido (no hay backend propio todavía).
    observabilidad/evidencia/aplicabilidad mobile/accionabilidad (máx 12), promover
    solo ≥9/12. Lo que no pasa el corte va a `CRITERIA-BACKLOG.md`, no se descarta
    ni se inventa para llegar a un número.
-6. **max_tokens de las llamadas a la API de Claude está fijado en 1000** — es una
-   restricción del entorno de artefactos, no la cambies sin saber por qué existe.
+6. **max_tokens ya no está fijado en 1000.** Esa era una restricción real del
+   entorno viejo de artifacts de Claude.ai — dejó de aplicar cuando la app pasó
+   a ser una web app propia con su proxy serverless (`api/critique.js`). Con
+   criterios reales matcheados (más contexto de entrada), 1000 se quedaba
+   corto y truncaba el JSON a mitad de camino (`stop_reason: "max_tokens"`),
+   rompiendo el parseo del lado del cliente — causa real de una falla en
+   producción, corregida subiendo el límite a 4096 en la llamada de crítica
+   (la de clasificación se queda en 1000, le sobra). El paso de clasificación
+   (`CLASSIFICATION_PROMPT`) sigue en 1000 porque su salida es chica y nunca
+   se acercó al límite.
 
 ## Qué falta (Balde 2 — ver detalle completo en CRITERIOS-DE-CRITICA.md)
 
