@@ -9,33 +9,48 @@ Herramienta de crítica de interfaces asistida por IA: se sube una captura mobil
 (JPG/PNG), Claude la evalúa contra un criterio documentado y versionado, y queda
 como propuesta hasta que una persona del equipo la aprueba, rechaza o edita.
 
-**Estado actual:** MVP funcional de punta a punta, v1.9. Corre hoy como un
-artefacto de Claude.ai con storage compartido (no hay backend propio todavía).
-**Este repo es el primer paso hacia sacarlo de ahí.**
+**Estado actual:** MVP funcional de punta a punta, v1.15 (212 criterios de
+documentación). Corre como web app propia: Vite + React en Vercel
+(`github.com/jlgaleano1-design/withtaste`, auto-deploy en `main`), Supabase
+como backend (`kv_store` + auth por magic link), y un proxy serverless propio
+(`api/critique.js`) que guarda `ANTHROPIC_API_KEY` del lado del servidor. El
+salto fuera del artefacto de Claude.ai ya se hizo — este repo ya no es "el
+primer paso hacia sacarlo de ahí", es donde vive ahora.
 
 ## Dónde está todo (no dupliques esta info, andá a leerla)
 
-- `README.md` — overview y estructura general.
+- `README.md` — overview, cómo correrlo local, y estado del despliegue.
 - `docs/CRITERIOS-DE-CRITICA.md` — **la fuente de verdad real.** Historial completo
-  de versiones (v1.0→v1.9), taxonomía de 3 categorías, sistema de puntuación,
-  decisiones de arquitectura, qué falta ("Balde 2"). Leelo antes de tocar cualquier
-  lógica de criterio.
+  de versiones (v1.0→v1.15), taxonomía de 4 categorías (la 4ta reservada,
+  sin implementar), sistema de puntuación, taxonomía de contexto de dos
+  capas, 14 heurísticas, decisiones de arquitectura, qué falta ("Balde 2").
+  Leelo antes de tocar cualquier lógica de criterio.
 - `docs/research/CRITERIA-BACKLOG.md` — workflow de curación de criterios (rúbrica
-  de 4 ejes, corte de promoción ≥9/12) y candidatos evaluados pero no promovidos.
+  de 4 ejes, corte de promoción ≥9/12), candidatos evaluados pero no promovidos,
+  y las próximas rondas sugeridas (ISO 9241-210 desglosado, data viz por tipo
+  de gráfico, re-encuestar Holloway si se consigue acceso sin paywall, etc.).
 - `docs/research/` — investigación de origen: Design Judgment Handoff,
   UX Component Critique Criteria, snapshot y dataset filtrado de UICrit.
 - `app/ui-critique-repo.jsx` — la app completa (React, un solo archivo,
-  actualmente ~300KB porque incluye datos de UICrit embebidos).
+  actualmente ~530KB porque incluye datos de UICrit embebidos — va a seguir
+  creciendo con cada ronda de criterios).
+- `api/critique.js` — proxy serverless a la API de Anthropic.
+- `src/` — bootstrap (`main.jsx`), login (`Auth.jsx`), y el shim de storage
+  sobre Supabase (`supabaseStorage.js`).
 
 ## Reglas que no se negocian (aprendidas a las malas en la conversación original)
 
-1. **3 categorías de contenido, namespaces separados, nunca se mezclan:**
-   - `criterion:` = documentación externa (WCAG, Nielsen, etc.) — no pasó por
-     nuestro ojo.
+1. **4 categorías de contenido, namespaces separados, nunca se mezclan (la 4ta reservada, sin implementar):**
+   - `criterion:` = documentación externa (WCAG, Nielsen, dark patterns, etc.) —
+     no pasó por nuestro ojo.
    - `external-reference:` = datasets visuales de terceros (hoy: UICrit) — no pasó
      por nuestro ojo, **100% mobile, cero web/desktop sin excepciones.**
    - `critique:` = nuestro propio corpus — solo cuenta lo que tiene
      `status: "approved"` por un humano real.
+   - `client-feedback:` = **reservado, no implementado.** Feedback real de
+     clientes (casos reales, no nuestra inferencia sobre una imagen) — sin
+     modelo de datos ni UI todavía. Ver categoría 4 en `CRITERIOS-DE-CRITICA.md`
+     antes de empezar a construirlo.
 2. **El círculo de alimentación solo usa críticas `approved`** — nunca pendientes
    ni rechazadas, para que un hallazgo malo sin revisar no contamine las próximas.
 3. **Cuando cambies el criterio, actualizá DOS lugares a la vez**: el
@@ -64,8 +79,10 @@ artefacto de Claude.ai con storage compartido (no hay backend propio todavía).
 ## Qué falta (Balde 2 — ver detalle completo en CRITERIOS-DE-CRITICA.md)
 
 RAG semántico real (embeddings), grafo de criterios en conflicto, base de datos
-relacional real, suite formal de evaluación, autenticación por usuario. Ninguno es
-"siguiente paso obvio" — solo se justifican si el volumen realmente lo exige.
+relacional real, suite formal de evaluación, y roles/permisos diferenciados (hoy
+la auth es binaria: adentro con magic link = todo permitido, sin niveles).
+Ninguno es "siguiente paso obvio" — solo se justifican si el volumen realmente
+lo exige.
 
 ## Estilo de trabajo esperado
 

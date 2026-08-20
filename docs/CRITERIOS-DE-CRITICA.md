@@ -1,6 +1,6 @@
 # Criterio de crítica de UI — Bitácora de Crítica UI
 
-**Versión:** 1.11 · **Última actualización:** 19 de agosto de 2026
+**Versión:** 1.15 · **Última actualización:** 20 de agosto de 2026
 **Estado:** vivo — se actualiza cada vez que el equipo aprueba sumar o ajustar una fuente.
 
 Este documento es la fuente de verdad de qué principios usa Claude para evaluar cada
@@ -11,32 +11,44 @@ comportamiento real coincida con lo documentado acá.
 
 ---
 
-## Estado del MVP (v1.11 — consolidado)
+## Estado del MVP (v1.15 — consolidado)
 
 **MVP funcional de punta a punta**, con 4 capas de conocimiento activas antes de
-cada crítica. Flujo: subir → clasificar pantalla → matchear documentación (179
+cada crítica. Flujo: subir → clasificar pantalla → matchear documentación (212
 criterios) + referencias externas de UICrit (mobile-only) + críticas propias ya
-aprobadas → generar crítica con blocks/tipos epistémicos/fallo crítico → revisar
-humano → aprobar (lo cual retroalimenta la próxima crítica).
+aprobadas → calcular pesos heurísticos por contexto → generar crítica con
+blocks/tipos epistémicos/severidad de 4 niveles/fallo crítico → revisar
+humano → aprobar (lo cual retroalimenta la próxima crítica). Corre como web
+app propia (Vite + React + Vercel + Supabase) — ver `README.md` para el
+estado del despliegue.
 
 **Contenido base:**
-- **179 criterios de documentación (categoría 1)**, curados con workflow de
+- **212 criterios de documentación (categoría 1)**, curados con workflow de
   puntaje ≥9/12 — 70 biblioteca de componentes (batch1) + 57 de escalado inicial
   (batch2) + 29 de la primera ronda de curación (batch3) + 7 de WCAG 2.2 AAA
   (batch4, v1.10) + 16 del catálogo de reglas de Impeccable (batch5, v1.11,
-  verificado contra el código fuente real, no de memoria). Este número (179) es
-  el conteo real verificado contra el código (`SEED_CRITERIA*.length` en el
-  `.jsx`) — versiones anteriores de este documento decían 175, que no coincidía
-  con lo efectivamente sembrado; se corrige acá para que la doc no mienta.
-  Backlog de candidatos evaluados y no promovidos en `CRITERIA-BACKLOG.md`.
+  verificado contra el código fuente real, no de memoria) + 2 del libro de
+  Holloway sobre crítica de apps (batch6, v1.12, acceso parcial por paywall)
+  + 20 de Brignull/FTC sobre patrones oscuros (batch7, v1.14, dimensión
+  nueva) + 11 de Vercel Design Guidelines (batch8, v1.15). Este número (212)
+  es el conteo real verificado contra el código (`SEED_CRITERIA*.length` en
+  el `.jsx`, y `EXPECTED_CRITERIA_COUNT` se deriva de esas mismas longitudes,
+  no de un número hardcodeado) — versiones anteriores de este documento
+  decían 175, que no coincidía con lo efectivamente sembrado; se corrige acá
+  para que la doc no mienta. Backlog de candidatos evaluados y no promovidos
+  en `CRITERIA-BACKLOG.md`.
 - 151 pantallas / 547 comentarios de UICrit (categoría 2), filtrados a `human`+`both`
   (10.286 de 11.344 elegibles en el dataset completo, preservado en
-  `docs/research/uicrit-filtered-human-both.json`). Uso gateado a mobile-only.
+  `docs/research/uicrit-filtered-human-both.json` — solo una muestra
+  estratificada está embebida en la app, no el dataset completo, para no
+  inflar el bundle). Uso gateado a mobile-only.
 - Círculo de alimentación de categoría 3: críticas propias aprobadas por un humano
   calibran automáticamente las próximas.
+- Categoría 4 (feedback real de clientes): reservada en la taxonomía, sin
+  implementar — ver más abajo.
 
-**Gobernanza:** versionado completo v1.0→v1.9 en este documento, taxonomía de 3
-categorías madre, workflow de curación repetible y documentado, estructura de repo
+**Gobernanza:** versionado completo v1.0→v1.15 en este documento, taxonomía de 4
+categorías madre (la 4ta reservada), workflow de curación repetible y documentado, estructura de repo
 lista para GitHub.
 
 Ver las listas completas ("Qué tiene el MVP" / "Qué queda en Balde 2") en la
@@ -65,19 +77,101 @@ sugerencia que el modelo pueda interpretar distinto cada vez.
 Cada hallazgo individual también indica a qué bloque pertenece (`finding.block`:
 `"A"`, `"B"` o `"C"`), además de su categoría, severidad y principio de origen.
 
-## Etiquetas de contexto
+## Etiquetas de contexto (v2, desde v1.13 — dos capas)
 
-Al subir una imagen, quien la sube puede marcar 0 o más etiquetas de contexto, que
-ajustan cómo Claude pesa la evaluación:
+Al subir una imagen, quien la sube elige un **tipo de experiencia** (selección
+única, obligatorio elegir cuál es la tarea principal de la persona en esa
+pantalla) y, opcionalmente, una o más **consideraciones** (selección múltiple,
+condiciones transversales que aplican sin importar el tipo de experiencia). Las
+dos capas se combinan siempre en un solo array de tags al momento de guardar y
+armar el prompt — para el resto del sistema (retrieval de criterios, prompt de
+la IA) siguen viéndose como una lista plana, como antes de v1.13.
 
+**Tipo de experiencia (elegí 1):**
 - **Onboarding** — prioriza progreso visible y baja carga inicial.
-- **Flujo transaccional** — prioriza prevención de errores y confianza por sobre
+- **Tarea / transacción** — prioriza prevención de errores y confianza por sobre
   creatividad visual; más estricto en Bloque A.
-- **Alta carga cognitiva** — prioriza Ley de Miller y agrupación Gestalt.
-- **Dashboard / datos densos** — evalúa contra patrones de IBM Carbon para tablas.
-- **Exploración / descubrimiento** — el Bloque C tiene más margen.
-- **Marketing / landing** — el Bloque C pesa más en la impresión general, pero el
-  Bloque A sigue siendo innegociable.
+- **Explorar / encontrar** — el Bloque C tiene más margen.
+- **Crear / editar** — prioriza prevención de pérdida de datos, claridad de
+  estado guardado/no guardado, y affordance de las herramientas de edición.
+- **Monitorear / analizar** — evalúa contra patrones de IBM Carbon para datos
+  densos; prioriza legibilidad por sobre decoración.
+- **Comunicar / colaborar** — prioriza claridad de quién ve/recibe qué y de
+  acciones irreversibles (enviar, borrar, compartir de más).
+- **Administrar / configurar** — prioriza claridad de consecuencias por opción,
+  agrupación lógica, y prevención de cambios accidentales de alto impacto.
+- **Marketing / convertir** — el Bloque C pesa más en la impresión general, pero
+  el Bloque A sigue siendo innegociable.
+
+**Consideraciones (opcional, se pueden combinar entre sí y con cualquier tipo):**
+- **Tarea compleja** — prioriza Ley de Miller y agrupación Gestalt.
+- **Alta densidad** — evalúa contra patrones de IBM Carbon para tablas.
+- **Alto riesgo** — sube el estándar de Bloque A al nivel de un flujo
+  transaccional aunque el tipo de experiencia sea otro.
+- **IA asistida** — prioriza que quede clara la frontera entre lo que generó la
+  IA y lo que hizo la persona, y la posibilidad de corregir/rechazar.
+- **Multilenguaje** — atención a truncamiento y layouts que no tolerarían texto
+  más largo.
+- **Accesibilidad** — sube el estándar del bloque de Accesibilidad por sobre
+  el resto.
+- **Uso experto** — tolera más densidad y atajos, no penaliza patrones poco
+  amigables para principiantes.
+
+**Compatibilidad:** los ~180 criterios de la base (categoría 1) siguen taggeados
+con nombres de la taxonomía v1 (ej. `"Flujo transaccional"`, `"Dashboard / datos
+densos"`). No se reescribieron. En su lugar, `LEGACY_TAG_ALIASES` en el `.jsx`
+hace que cada tag nuevo "herede" el/los tag(s) viejo(s) equivalentes solo para
+efectos de retrieval — el matcheo por tag sigue funcionando sin tocar la base.
+Los curadores de rondas futuras deberían taggear criterios nuevos ya con la
+taxonomía v2 directamente.
+
+## Severidad (4 niveles, desde v1.13)
+
+La escala de severidad de `finding.severity` pasó de 3 a 4 niveles, con
+`"bloqueante"` como techo — pensado como base para un futuro "Resumen de
+revisión" que cuente cuántos bloqueantes tiene un set de pantallas:
+
+- **Menor** — fricción cosmética o de pulido; no impide ni retrasa la tarea.
+- **Moderada** — genera confusión o esfuerzo extra, pero se resuelve solo.
+- **Mayor** — probablemente causa error, abandono parcial o pérdida de
+  confianza en un flujo importante.
+- **Bloqueante** — impide completar la tarea, causa pérdida de datos, o una
+  acción irreversible sin confirmación adecuada. Uso estricto: no es "el
+  hallazgo más grave de la lista", es "no se puede seguir" o "riesgo alto de
+  daño real".
+
+Críticas guardadas antes de v1.13 usan la escala vieja (`alta`/`media`/`baja`).
+Se siguen mostrando correctamente vía alias de compatibilidad en
+`SEVERITY_STYLES` — no se reescriben retroactivamente.
+
+## Biblioteca de 14 heurísticas y perfil de pesos contextual (desde v1.13)
+
+Antes de v1.13, el tipo de experiencia/consideraciones solo ajustaban texto
+instructivo dentro del prompt ("si es Onboarding, priorizá X"). Desde v1.13 hay
+además un sistema de pesos explícito: 14 heurísticas fijas (H1–H14, cubriendo
+propósito, jerarquía visual, comprensión, navegación, affordance, feedback,
+prevención de errores, carga cognitiva, consistencia, eficiencia, densidad,
+accesibilidad, confianza/consecuencias, y transparencia de IA) arrancan todas en
+peso base 2/4, y el tipo de experiencia elegido más las consideraciones marcadas
+suman o restan peso a heurísticas específicas (clamp final a 1–4). H14
+(transparencia de IA) es la única que se activa entera (forzada a peso 4) solo
+si se marcó "IA asistida"; si no, ni siquiera se le muestra a la IA.
+
+Este cálculo se hace en JS (`computeHeuristicWeights` en el `.jsx`), no se le
+pide a Claude que lo calcule — mismo patrón que el resto de los "supplements"
+dinámicos del prompt (criterios matcheados, críticas pasadas, referencias
+externas). El resultado se manda como texto ya resuelto y ordenado de mayor a
+menor peso, y se le pide a la IA que complete un campo nuevo `finding.heuristic`
+/ `win.heuristic` con el código de la heurística más relevante, y que priorice
+al ordenar los hallazgos combinando peso heurístico × severidad × confianza.
+
+Los 14 heurísticos son un campo paralelo a las 9 categorías existentes
+(`category`/`CRITERIA_SECTIONS`), no un reemplazo — las categorías siguen
+siendo las que organiza el retrieval de la base de 181 criterios; los
+heurísticos son una capa de priorización contextual encima. No se agregó un
+campo separado de "aplicabilidad" (evaluable/hipótesis/no evaluable) porque el
+`type: "hipotesis"` existente más la regla de "omití lo que no se pueda evaluar
+desde una imagen" ya cubren ese caso.
 
 ## Compatibilidad con críticas anteriores
 
@@ -268,6 +362,22 @@ El corpus original con las reglas completas se conserva en
   transaccionales; útil para evaluar si una pantalla genera dudas o vacilación antes
   de una acción importante (pagar, confirmar, eliminar).
 
+## 10. Patrones oscuros (desde v1.14)
+- **Harry Brignull — deceptive.design** (ex darkpatterns.org, la fuente que originó
+  el término en 2010): confirmshaming, interferencia visual / preselección, trick
+  questions, publicidad disfrazada, roach motel, forced continuity, urgencia
+  artificial, prueba social fabricada, privacy Zuckering.
+- **FTC — "Bringing Dark Patterns to Light" (2022)** — reporte con casos reales de
+  aplicación regulatoria, usado para calibrar qué tan seria es la práctica más allá
+  de la taxonomía de Brignull.
+- **WCAG 2.2 — 1.4.1** cuando el patrón se apoya únicamente en el color para
+  comunicar un estado.
+- Acotado a lo observable en una imagen estática: peso visual, presencia/ausencia
+  de una etiqueta, contraste, redacción de la copy. Se excluyen explícitamente los
+  patrones que solo se detectan con el paso del tiempo o interacción repetida (ej.
+  "nagging" — notificaciones insistentes), porque una sola captura no puede
+  mostrarlos — ver `docs/research/CRITERIA-BACKLOG.md`.
+
 ---
 
 ## Consideraciones transversales (no son categoría propia, pero pueden aparecer en cualquier hallazgo)
@@ -301,6 +411,9 @@ El corpus original con las reglas completas se conserva en
 | Shopify Polaris | Guía de plataforma (producto de conversión, voz y tono) | Gratis, oficial |
 | `ehmo/platform-design-skills` (GitHub) | Repo open source, no importado literalmente todavía | Open source |
 | Impeccable (impeccable.style / `pbakaus/impeccable`) | Skill de diseño para agentes de código, 47 reglas determinísticas evaluadas en v1.11 | Open source (Apache 2.0) |
+| Harry Brignull — deceptive.design (ex darkpatterns.org) | Taxonomía de dark patterns, evaluada en v1.14 | Gratis (sitio) |
+| FTC — "Bringing Dark Patterns to Light" (2022) | Reporte regulatorio con casos reales, evaluado en v1.14 | Gratis, oficial |
+| Vercel Design Guidelines (vercel.com/design/guidelines) | Guía de diseño de interfaz, nominalmente web pero con reglas visuales/tipográficas agnósticas de plataforma, evaluada en v1.14 | Gratis, oficial |
 
 *Nota:* de los libros con derechos de autor, se aplican los **principios/conceptos**
 (que no son propiedad de nadie), nunca se reproduce texto textual de esas obras.
@@ -319,18 +432,46 @@ Decisión final:
   Se omite el 100% de lo que sea web o desktop. Solo entra contenido mobile/app
   (ej. UICrit, que ya es 100% mobile por venir de RICO — cumple la regla de por sí).
 
-## Las 3 categorías madre (formalizado en v1.6)
+## Las 4 categorías madre (categoría 4 reservada desde v1.13)
 
-No es "escrito vs. visual" — es **si pasó o no por nuestro control humano**:
+No es "escrito vs. visual" — es **si pasó o no por nuestro control humano**, y
+ahora también **si es evidencia generada por nosotros o evidencia real del
+mundo (clientes)**:
 
 | # | Categoría | Qué es | Namespace en storage | ¿Pasó por nuestro ojo? |
 |---|---|---|---|---|
 | 1 | **📚 Documentación** | Reglas escritas de fuentes externas (WCAG, Nielsen, GOV.UK, dark patterns, i18n, IA, data viz, estética) | `criterion:` | No |
-| 2 | **🖼️ Referencias visuales externas** | Datasets de críticas visuales de terceros sobre pantallas reales (ej. UICrit) | `external-reference:` (namespace nuevo, sin implementar en la app todavía) | No |
+| 2 | **🖼️ Referencias visuales externas** | Datasets de críticas visuales de terceros sobre pantallas reales (ej. UICrit) | `external-reference:` — implementado desde v1.8 (ver "Categoría 2 — estado actual" más abajo) | No |
 | 3 | **✅ Nuestro corpus propio** | Cada pantalla que subimos, criticamos, y un humano del equipo aprobó | `critique:`, filtrado por `status: "approved"` | **Sí** |
+| 4 | **🗣️ Feedback real de clientes** | 🔒 **Reservada — namespace y forma definidos, sin contenido ni UI de carga todavía.** Casos escritos (con imágenes opcionales) de resultados reales que no salieron bien, reportados por o sobre clientes reales — evidencia de interacción/consecuencia real que una imagen estática nunca puede dar. | `client-feedback:` (namespace reservado, no implementado) | **Sí, y con más peso que la 3: es resultado real, no nuestra propia inferencia** |
 
 Ninguna categoría se mezcla con otra. Categoría 2 nunca entra a `criterion:` ni a
-`critique:` — necesita su propio namespace.
+`critique:` — necesita su propio namespace. Categoría 4 tampoco se mezcla con la
+3: la 3 es "lo que nosotros mismos criticamos y aprobamos" (inferencia experta
+sobre una imagen), la 4 es "lo que le pasó de verdad a un cliente" — evidencia
+de una categoría distinta y superior en peso probatorio.
+
+### Categoría 4 — por qué existe y qué resuelve (reservada, v1.13)
+
+Todo el sistema de tipos epistémicos (`"violacion"` / `"riesgo"` / `"hipotesis"`
+/ `"convencion"` / `"preferencia"`, ver más abajo) existe porque la IA solo ve
+una imagen estática y tiene prohibido afirmar como hecho algo que solo se
+confirma con interacción real — eso queda marcado como `"hipotesis"` con un
+`validationNeeded` explicando qué evidencia haría falta. Hoy esas hipótesis
+quedan huérfanas: se generan, se marcan, pero nada las confirma ni las
+descarta nunca. La categoría 4 es exactamente esa evidencia faltante — cuando
+llega un caso real de un cliente, debería poder vincularse a los hallazgos o
+heurísticas (H1–H14) que confirma o contradice, y en teoría eso debería poder
+"cerrar" una hipótesis pendiente convirtiéndola en un tipo confirmado. Ese
+mecanismo de vínculo (`hipotesis` ↔ caso de cliente) todavía no está diseñado,
+solo la categoría está reservada como slot en la taxonomía.
+
+**Deliberadamente no implementado todavía:** ni el modelo de datos completo
+(campos exactos: título del caso, fecha, quién reporta, narrativa, imágenes,
+hallazgos/heurísticas vinculadas), ni la UI de carga, ni el namespace real en
+`window.storage`. Se documenta acá como slot oficial de la taxonomía para que
+quede registrado que existe y por qué, sin forzar un diseño de datos antes de
+tener casos reales para validarlo contra.
 
 ### Categoría 2 — estado actual (v1.8: importado de verdad)
 
@@ -402,12 +543,14 @@ JSON plano ya no permita.
 
 ---
 
-## 🔵 BALDE 2 — CTA para el futuro (avance real en v1.11)
+## 🔵 BALDE 2 — CTA para el futuro (avance real en v1.15)
 
-- 🟡 **Base de criterios atómicos** — de 65 a **179 registros reales**
+- 🟡 **Base de criterios atómicos** — de 65 a **212 registros reales**
   (verificado contra el código: 70 biblioteca de componentes + 57 de escalado
   inicial + 29 de la primera ronda del workflow de curación + 7 de WCAG 2.2 AAA
-  (v1.10) + 16 del catálogo de reglas de Impeccable (v1.11)). Objetivo
+  (v1.10) + 16 del catálogo de reglas de Impeccable (v1.11) + 2 del libro de
+  Holloway sobre crítica de apps (v1.12) + 20 de Brignull/FTC sobre patrones
+  oscuros (v1.14) + 11 de Vercel Design Guidelines (v1.15)). Objetivo
   original: 1.500-2.000. **Se adoptó un workflow de curación en vez de
   perseguir el número a la fuerza** (ver `CRITERIA-BACKLOG.md`): encuestar el
   universo completo de cada fuente, puntuar cada candidato 1-3 en
@@ -472,6 +615,104 @@ atómico, arquitectura de sistema completa). Documento producido por otro agente
 ---
 
 ## Historial de versiones
+- **v1.15 (20 ago 2026):** lote 8 de curación de criterios (11 nuevos, sobre
+  la base de 201 → 212), a partir de Vercel Design Guidelines
+  (vercel.com/design/guidelines). Pedido explícito del equipo: aunque la
+  fuente es nominalmente "web", se encuestó igual porque buena parte de sus
+  reglas de diseño visual/tipografía/color no son específicas de plataforma
+  y aplican igual a interfaces mobile nativas. Encuesta completa de las ~130
+  reglas de la guía (secciones Interactions, Animations, Layout, Content,
+  Forms, Performance, Design, Copywriting) — la gran mayoría quedó fuera de
+  alcance por ser reglas de implementación (CSS/JS específico, foco de
+  teclado, rendimiento) o solo verificables con interacción real, no desde
+  una imagen estática. Las 11 promovidas: radios de esquina anidados y
+  concéntricos, safe areas en mobile (notch/home indicator), balance de
+  peso visual en lockups ícono+texto, bordes semitransparentes combinados
+  con sombra, consistencia de matiz de borde/sombra/texto sobre fondos de
+  color, paletas accesibles para daltonismo en gráficos, viudas/huérfanas
+  tipográficas, números tabulares en columnas comparables, ningún estado
+  (error/vacío) como callejón sin salida, formato de moneda consistente
+  (0 o 2 decimales, nunca mezclados), y separación de números y unidades.
+  Todas van a dimensiones ya existentes (ninguna nueva esta vez) — ver
+  "Fuentes completas" para la entrada de esta fuente. Candidatos evaluados y
+  rechazados (Title Case como regla universal, ajuste óptico de ±1px,
+  sombras en dos capas, contraste diferencial en estados hover/active/focus,
+  y varios más de implementación/código) documentados en
+  `docs/research/CRITERIA-BACKLOG.md`.
+- **v1.14 (20 ago 2026):** lote 7 de curación de criterios (20 nuevos, sobre
+  la base de 181 → 201). Dos frentes: (1) nueva dimensión **"Patrones
+  oscuros"** (10ma categoría), con 9 criterios curados sobre la taxonomía de
+  Harry Brignull (deceptive.design) y el reporte de la FTC "Bringing Dark
+  Patterns to Light" (2022) — confirmshaming, interferencia visual /
+  preselección, trick questions, publicidad disfrazada, roach motel (señal
+  visual), forced continuity, urgencia artificial (countdown sin fecha real),
+  prueba social fabricada, privacy Zuckering. Se agregó como dimensión nueva
+  en vez de forzar estos hallazgos dentro de categorías existentes porque son
+  cualitativamente distintos (intención de manipular, no error de ejecución)
+  y porque agruparlos aparte hace más fácil auditar cuántos hallazgos de este
+  tipo surfacea el modelo con el tiempo. Acotado a lo observable en una
+  imagen estática — se descartó explícitamente "nagging" (notificaciones
+  insistentes) porque solo se detecta con interacción repetida a lo largo
+  del tiempo, no en una sola captura. (2) 11 criterios nuevos en dimensiones
+  ya existentes (Jerarquía visual, Consistencia y sistema de diseño,
+  Tipografía, Color y contraste, Espaciado y alineación, Componentes y
+  affordance ×2, Copy y microcopy ×2, Accesibilidad, Claridad del
+  propósito), curados con el mismo corte de calidad (≥9/12 en observabilidad,
+  fuerza de evidencia, aplicabilidad y accionabilidad). `EXPECTED_CRITERIA_COUNT`
+  se actualizó automáticamente (deriva de la longitud real de los arrays
+  fuente) — el guardrail de completitud del export de skill sigue siendo
+  correcto sin tocarlo a mano. Candidatos evaluados y rechazados en esta
+  ronda (Postel's Law, Doherty Threshold, Aesthetic-Usability Effect,
+  Nagging, superposición con "costos ocultos" genérico, Comparison
+  Prevention estricto, Microsoft Inclusive Design Toolkit, WAI-ARIA Date
+  Picker, Fake Urgency genérico) documentados en
+  `docs/research/CRITERIA-BACKLOG.md`.
+- **v1.13 (20 ago 2026):** framework de contexto y heurísticas, a partir de un
+  documento de especificación ("Critique Context & Heuristic Library — Agent
+  Handoff — v0.1") provisto por el equipo. Tres cambios aditivos, sin tocar la
+  base de 181 criterios ni el flujo de revisión humana existente: (1)
+  taxonomía de contexto de dos capas (tipo de experiencia de selección única +
+  consideraciones opcionales multi-select), con `LEGACY_TAG_ALIASES` puenteando
+  a los nombres viejos para que el retrieval sobre `SEED_CRITERIA` siga
+  funcionando sin reescribir esa base; (2) severidad de 4 niveles
+  (`menor`/`moderada`/`mayor`/`bloqueante`) en vez de 3, con alias de
+  compatibilidad para críticas guardadas antes de este cambio; (3) biblioteca
+  de 14 heurísticas con pesos contextuales calculados en JS
+  (`computeHeuristicWeights`) e inyectados en el prompt como un supplement más
+  (mismo patrón que criterios/críticas pasadas/referencias externas), con un
+  campo nuevo `finding.heuristic`/`win.heuristic` y una regla explícita de
+  orden por peso × severidad × confianza. Ver "Etiquetas de contexto (v2)",
+  "Severidad (4 niveles)" y "Biblioteca de 14 heurísticas" más arriba para el
+  detalle completo. Decisiones de alcance explícitas: los heurísticos son un
+  campo paralelo a las 9 categorías existentes, no un reemplazo; no se agregó
+  un campo separado de "aplicabilidad" porque `type: "hipotesis"` + la regla de
+  observabilidad existente ya cubren ese caso; el modelo de confianza
+  (alta/media/baja) no cambió porque ya coincidía con lo que pedía el doc.
+- **v1.12 (19 ago 2026):** ronda de curación sobre el libro "Land Your Dream
+  Design Job" de Holloway (holloway.com/g/land-your-dream-design-job),
+  secciones sobre crítica de apps (4 páginas: seis frameworks, estableciendo
+  objetivos, cómo destacar en la crítica, crítica en acción). **Fuente
+  distinta a las anteriores:** es una guía de carrera para entrevistas de
+  trabajo, no un corpus de reglas ni un estándar normativo — la mayoría de su
+  contenido son frameworks de PROCESO (Jobs to be Done, personas, segmentación
+  por familiaridad del usuario, capas estética/funcional/estratégica) o
+  consejos de conducta para quien hace la entrevista (dar contexto, mantenerse
+  adaptable, comparar apps competidoras, evitar elogios sin sustento) — quedan
+  fuera de alcance por el mismo motivo que ISO 9241-210 ya documentado: son
+  checklist de proceso, no hallazgos atómicos verificables desde una imagen
+  estática. **Limitación real de acceso:** 3 de las 4 secciones están detrás
+  de paywall más allá de la vista previa — no se pudo encuestar el "universo
+  completo" en esas, a diferencia de la ronda de Impeccable. De lo poco que sí
+  era un hallazgo atómico observable, varios candidatos duplicaban criterios
+  ya presentes (consistencia de íconos → WCAG 3.2.4 ya en batch1; estado de
+  selección visible → Nielsen #1 ya en batch3; affordance de búsqueda →
+  Don Norman/Nielsen #6 ya citado genéricamente) y se descartaron por
+  redundancia, no por bajo puntaje. Se promovieron **2** (≥9/12): claridad de
+  filtros contextuales (los pills activos no deben repetir info ya visible) y
+  densidad de tácticas de crecimiento (volumen de banners/notificaciones no
+  debería competir con la tarea principal). Base total: 179 → **181**. Detalle
+  completo (promovidos + rechazados por duplicación/fuera de alcance/no
+  observable) en `CRITERIA-BACKLOG.md`.
 - **v1.11 (19 ago 2026):** ronda de curación sobre el catálogo de reglas
   determinísticas de Impeccable (impeccable.style /
   github.com/pbakaus/impeccable, Apache 2.0, skill de diseño para agentes de

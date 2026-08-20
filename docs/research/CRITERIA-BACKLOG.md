@@ -233,6 +233,184 @@ UI evalúe. No encaja en ninguna de las 9 dimensiones actuales sin forzarlo.
 - Duplicado: **1**
 - Base total después de esta ronda: **179** (163 + 16)
 
+## Ronda 4 — Holloway, "Land Your Dream Design Job" (v1.12, 19 ago 2026)
+
+**Fuente:** 4 secciones del libro de Holloway sobre crítica de apps para
+entrevistas de trabajo (`six-frameworks-for-critiquing-apps`,
+`establishing-app-critique-objectives`, `acing-the-app-critique`,
+`app-critique-in-action`).
+
+**Advertencia de acceso (como la ronda 2 con w3.org):** 3 de las 4 páginas
+están detrás de paywall más allá de la vista previa — `six-frameworks` corta
+en "Learn More", `acing-the-app-critique` corta antes del walkthrough de Yelp,
+`establishing-app-critique-objectives` corta con solo los títulos de los 6
+frameworks sin desarrollar. Solo `app-critique-in-action` (el ejemplo
+trabajado) llegó relativamente completo, aunque también corta antes del final
+("Whiteboard Challenge Format"). **No se pudo encuestar el "universo
+completo" de esta fuente** — es una limitación real de acceso, documentada
+para no fingir cobertura que no hubo.
+
+**Filtro de encaje aplicado primero (mismo espíritu que con Impeccable):** la
+mayoría del contenido accesible son frameworks de PROCESO (Jobs to be Done,
+personas, segmentación por familiaridad del usuario, capas estética/
+funcional/estratégica, evaluación por experto citando Nielsen/HIG/Material ya
+cubiertos genéricamente) o consejos de conducta para quien hace la entrevista
+(dar contexto antes de empezar, mantenerse adaptable, criticar en grupo,
+comparar apps competidoras bajo el mismo JTBD, evitar elogios sin sustento,
+mirar más allá de la app — App Store, emails, notificaciones push). Ninguno
+de estos es un hallazgo verificable desde una imagen estática — son
+checklist de proceso para la persona que critica, no criterios que nuestra
+IA pueda chequear contra una captura. Mismo motivo por el que ya se había
+dejado ISO 9241-210 fuera de alcance (ver arriba). Se descartaron en bloque
+sin puntuar caso por caso.
+
+### Candidatos atómicos evaluados (~9, de la sección "App Critique in Action" — la única con hallazgos concretos por pantalla)
+
+**Promovidos (≥9/12):**
+| Candidato | Puntaje | Motivo |
+|---|---|---|
+| Claridad de filtros contextuales (pills no deben repetir info ya visible) | 10/12 | Totalmente observable en una imagen, aplica igual en mobile, recomendación concreta (sacar la redundancia). No se solapa con nada ya promovido. |
+| Densidad de tácticas de crecimiento (volumen de banners/notis no debe competir con la tarea principal) | 9/12 | Observable contando elementos promocionales en la captura; evidencia = heurística práctica del libro, no normativa — justo en el corte. |
+
+**Rechazados por duplicar un criterio ya promovido (no por bajo puntaje — habrían pasado el corte, pero no suman cobertura nueva):**
+- **Consistencia de estilo de ícono** (hairline vs. filled vs. thick) — hubiera puntuado 10/12, pero duplica casi textual el WCAG 3.2.4 ya en `SEED_CRITERIA` (seed-047: "componentes con la misma función deben identificarse de forma consistente") + Nielsen #4 ya en batch1.
+- **Estado de selección visible** (tab activo, ítem marcado debe distinguirse) — hubiera puntuado 10/12, pero es casi idéntico a un criterio de batch3 ya promovido (12/12): "un elemento seleccionado (tab activo, ítem marcado) debe distinguirse visualmente de forma inequívoca del resto".
+- **Affordance de búsqueda** (sombra/placeholder indicando que se puede tocar/buscar) — 9/12, pero es una restatement de Don Norman/Nielsen #6, ya citado genéricamente en el `RUBRIC_PROMPT` sin aportar una instancia atómica nueva y distinta.
+- **Claridad de botón de acción** ("Order Now" debe guiar el siguiente paso) — se solapa fuertemente con Nielsen #2/Krug ya citados y con los criterios de componente `button`/CTA existentes en la biblioteca.
+
+**Rechazados por no ser un hallazgo verificable (son técnicas del crítico o juicios estratégicos/subjetivos, no algo que se marque como violación/riesgo en una imagen):**
+Squint test, método de desaturación, "consistency check" de impresión de marca,
+análisis de splash screen, prominencia de hero content, qué tab es default
+(revela prioridad, no es un error a corregir).
+
+**Rechazados por no ser observables desde una imagen estática (necesitan
+flujo multi-pantalla, interacción, o conocimiento del backend):**
+método de recolección de preferencias (encuesta vs. incremental), eficacia
+real de la personalización, alternativa de aprendizaje implícito de
+preferencias, identificación de fricción en flujo (confirmaciones
+redundantes), soporte de navegación multi-vista (mapa vs. lista) — solo
+aplica a apps con mapa, caso de uso muy angosto además.
+
+### Números de esta ronda
+
+- Candidatos atómicos evaluados: **9** (de la única sección con contenido
+  concreto por pantalla; el resto de las ~20 páginas accesibles eran
+  framework de proceso, descartado en bloque)
+- Promovidos (≥9/12, sin duplicar cobertura existente): **2**
+- Rechazados por duplicar un criterio ya promovido: **4**
+- Rechazados por no ser hallazgo verificable (técnica del crítico / juicio
+  subjetivo): **6**
+- Rechazados por requerir interacción/flujo multi-pantalla: **5**
+- Frameworks de proceso descartados en bloque (no puntuados individualmente):
+  6 frameworks + ~8 consejos de metodología/objetivos
+- Base total después de esta ronda: **181** (179 + 2)
+
+## Ronda 7 (20 de agosto de 2026) — Patrones oscuros + relleno de dimensiones existentes
+
+Encuesta enfocada en la taxonomía de dark patterns de Harry Brignull
+(deceptive.design, ex darkpatterns.org) y el reporte de la FTC "Bringing Dark
+Patterns to Light" (2022), más una pasada de relleno sobre las 9 dimensiones
+ya existentes para sumar cobertura donde todavía era delgada. Acotado desde
+el inicio a lo **observable en una imagen estática** — la taxonomía completa
+de Brignull incluye patrones que solo se detectan con interacción a lo largo
+del tiempo (ej. nagging repetido, spam a contactos), explícitamente fuera de
+alcance para este producto hasta que exista un modo de crítica multi-sesión.
+
+**Promovidos (≥9/12): 20** — 9 en la nueva dimensión "Patrones oscuros"
+(`SEED_CRITERIA_BATCH7`, seed7-001 a seed7-009: confirmshaming,
+interferencia visual / preselección, trick questions, publicidad disfrazada,
+roach motel, forced continuity, urgencia artificial, prueba social
+fabricada, privacy Zuckering) + 11 en dimensiones existentes (seed7-010 a
+seed7-020: Jerarquía visual, Consistencia y sistema de diseño, Tipografía,
+Color y contraste, Espaciado y alineación, Componentes y affordance ×2, Copy
+y microcopy ×2, Accesibilidad, Claridad del propósito).
+
+**Rechazados (no promovidos esta ronda):**
+
+| Candidato | Motivo |
+|---|---|
+| **Postel's Law** ("sé estricto en lo que emitís, permisivo en lo que aceptás") | Es un principio de diseño de sistemas/APIs, no un hallazgo atómico verificable desde una imagen de UI — no hay nada puntual que marcar como violación en una captura. |
+| **Doherty Threshold** (tiempo de respuesta del sistema <400ms) | Requiere medir latencia real; no es observable ni inferible desde una imagen estática. |
+| **Aesthetic-Usability Effect** (interfaces más lindas se perciben como más usables) | Es un sesgo cognitivo descriptivo sobre cómo perciben las personas, no una regla normativa que un hallazgo pueda citar como criterio de corrección — usarlo como "principle" sería circular. |
+| **Nagging** (parte de la taxonomía de Brignull) | Por definición requiere observar interrupciones repetidas a lo largo del tiempo — imposible de verificar en una sola captura estática. Candidato a re-evaluar si el producto suma un modo de crítica de flujo/sesión. |
+| **"Costos ocultos" genérico** (cargo que aparece recién al final del checkout) | Se solapa con el criterio ya promovido de "forced continuity" (seed7-006) y con contenido ya existente sobre claridad de precios; una versión genérica sin especificidad nueva no suma cobertura, solo duplica. |
+| **Comparison Prevention estricto** (imposibilitar comparar precios/planes lado a lado) | Válido como patrón, pero tal como está formulado depende de que exista una alternativa de comparación real fuera de la pantalla evaluada — no verificable desde una sola imagen sin ese contexto externo. |
+| **Microsoft Inclusive Design Toolkit** (persona spectrum, exclusión situacional/temporal/permanente) | Es un framework de proceso de diseño (cómo pensar la inclusión), no un set de hallazgos atómicos verificables — mismo motivo por el que ISO 9241-210 y los frameworks de proceso de Holloway quedaron fuera en rondas anteriores. |
+| **WAI-ARIA Date Picker (patrón de interacción específico)** | El patrón normativo describe comportamiento de teclado/foco, no observable desde una imagen estática — ya cubierto en espíritu por la nota general de "Accesibilidad" sobre limitaciones de evaluar solo desde imagen. |
+| **Fake Urgency genérico** ("crea urgencia artificial" sin especificar mecanismo) | Demasiado vago para ser accionable — se descompuso en su lugar en el candidato específico y verificable "temporizador de cuenta regresiva sin fecha límite real" (seed7-007), que sí promovió. |
+
+### Números de esta ronda
+
+- Candidatos evaluados: **29** (20 promovidos + 9 rechazados)
+- Promovidos (≥9/12): **20**
+- Rechazados por no ser observables desde una imagen estática: 4
+  (Doherty Threshold, Nagging, Comparison Prevention estricto, WAI-ARIA Date
+  Picker)
+- Rechazados por ser framework de proceso, no hallazgo atómico: 2
+  (Postel's Law, Microsoft Inclusive Design Toolkit)
+- Rechazados por ser descriptivos/circulares, no normativos: 1
+  (Aesthetic-Usability Effect)
+- Rechazados por duplicar cobertura ya promovida: 1 (costos ocultos genérico)
+- Rechazados por ser demasiado vagos, resueltos como versión específica en su
+  lugar: 1 (Fake Urgency genérico → reemplazado por countdown sin fecha real)
+- Base total después de esta ronda: **201** (181 + 20)
+
+## Ronda 8 (20 de agosto de 2026) — Vercel Design Guidelines
+
+Fuente: vercel.com/design/guidelines. Pedido explícito del equipo: aunque es
+una guía nominalmente de diseño **web**, se encuestó igual porque una porción
+real de sus reglas (tipografía, color, composición visual) son agnósticas de
+plataforma y aplican tal cual a interfaces mobile nativas — no así las
+secciones de implementación técnica (Interactions, Animations, Performance,
+partes de Forms), que dependen de CSS/JS específico o de interacción real,
+fuera de alcance por el mismo motivo que siempre: no observable desde una
+imagen estática.
+
+**Encuesta completa:** las 8 secciones de la guía (~130 reglas atómicas
+listadas). La mayoría es implementación de código (ej. `touch-action:
+manipulation`, `aria-live`, virtualización de listas) o requiere estados
+dinámicos/interacción (ej. loading states, hover/focus, drag) — quedaron
+fuera en bloque, mismo criterio que "Interactions"/"Performance" en rondas
+anteriores.
+
+**Promovidos (≥9/12): 11** — todos a dimensiones ya existentes (`SEED_CRITERIA_BATCH8`,
+seed8-001 a seed8-011): radios anidados/concéntricos, safe areas en mobile,
+balance de peso en lockups ícono+texto, bordes semitransparentes + sombra,
+consistencia de matiz sobre fondos de color, paletas accesibles para
+daltonismo en gráficos, viudas/huérfanas, números tabulares, ningún estado
+como callejón sin salida, formato de moneda consistente, separación de
+números y unidades.
+
+**Rechazados (no promovidos esta ronda):**
+
+| Candidato | Motivo |
+|---|---|
+| **Title Case en headings/botones** | Es una decisión de estilo de marca propia de Vercel, no un principio universal — Apple HIG y Material 3 suelen preferir sentence case en botones. Promoverlo como regla normativa contradiría otras fuentes ya en la base. |
+| **Ajuste óptico de ±1px cuando la percepción le gana a la geometría** | Es una técnica/heurística de proceso para quien diseña ("ajustá a ojo"), no un hallazgo verificable y accionable sobre una interfaz ya construida — no hay nada puntual que marcar en una imagen. |
+| **Sombras en al menos dos capas (luz ambiental + directa)** | Contar capas de sombra con precisión desde una captura comprimida no es confiablemente observable — se descarta por bajo puntaje en observabilidad (2/3), queda debajo del corte. |
+| **Mayor contraste en :hover/:active/:focus que en el resto** | Requiere ver múltiples estados de un mismo elemento; una sola imagen estática solo muestra un estado a la vez — no verificable sin una segunda captura de comparación. |
+| **Explicit width/height + preload para evitar layout shift** | Es un problema que ocurre durante la carga (tiempo), no algo visible en una captura ya cargada — mismo motivo que excluye la mayoría de "Performance". |
+| **Iconos con nombre accesible vía `aria-label`** | Depende del DOM/árbol de accesibilidad, no de lo visible en la imagen — ya cubierto en espíritu por el criterio (sí promovido en el lote 7) sobre affordance visual de íconos-botón, que es la versión observable de esta misma preocupación. |
+| **"Errores next to their field" / resumen de errores** | Duplica cobertura ya existente en la base (criterios basados en GOV.UK error-message y Fluent 2 messagebar, presentes desde antes del lote 7) — no suma cobertura nueva. |
+| **"Usar numerales en vez de escribir números en palabras"** | Válido pero de bajo impacto y evidencia mayormente de estilo editorial propio, no normativa — quedó justo debajo del corte de 9/12 en esta pasada; candidato a revisar si se necesita completar la dimensión de Copy más adelante. |
+
+### Números de esta ronda
+
+- Candidatos evaluados: **19** (11 promovidos + 8 rechazados)
+- Promovidos (≥9/12): **11**
+- Rechazados por no ser observables desde una imagen estática: 3
+  (contraste diferencial hover/active/focus, layout shift por carga, sombras
+  en dos capas)
+- Rechazados por ser técnica/proceso de quien diseña, no hallazgo: 1
+  (ajuste óptico ±1px)
+- Rechazados por ser preferencia de marca, no principio universal: 1
+  (Title Case)
+- Rechazados por duplicar cobertura ya promovida: 2 (aria-label de íconos,
+  resumen de errores junto al campo)
+- Rechazados por quedar justo debajo del corte de calidad: 1 (numerales en
+  vez de palabras)
+- Base total después de esta ronda: **212** (201 + 11)
+
 ## Próxima ronda sugerida
 
 1. Spot-check manual de los 7 criterios AAA de la ronda 2 contra el texto
@@ -241,6 +419,15 @@ UI evalúe. No encaja en ninguna de las 9 dimensiones actuales sin forzarlo.
    específicas puede subirlos del 8/12 al corte.
 3. Data viz por tipo de gráfico específico (mapas, sankey, treemaps).
 4. ISO 9241-210 desglosado.
+5. Si el equipo consigue acceso completo (no paywalled) al libro de Holloway,
+   re-encuestar `establishing-app-critique-objectives`,
+   `six-frameworks-for-critiquing-apps` y el resto de `acing-the-app-critique`
+   — quedó contenido sin ver detrás del paywall que podría tener más
+   hallazgos atómicos como los de `app-critique-in-action`.
+6. Nagging y otros patrones de Brignull que requieren observar el paso del
+   tiempo (spam a contactos, notificaciones repetidas) — candidatos a
+   re-evaluar si el producto suma un modo de crítica de flujo/sesión
+   multi-captura.
 
-Cada ronda de este tamaño suma ~7-35 criterios reales — llegar a 1.500-2.000
+Cada ronda de este tamaño suma ~2-35 criterios reales — llegar a 1.500-2.000
 con este nivel de rigor son varias decenas de rondas, no una sola sesión.
