@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Exploración — nuevo componente de insight/hallazgo</title>
+<style>
+  :root{
+    --ink:#1a1a1e; --ink-soft:#63636b; --ink-faint:#9a9aa1;
+    --paper:#f7f8f8; --paper-raised:#ffffff; --paper-sunken:#f1f1f2;
+    --rule:rgba(20,20,24,0.09); --rule-strong:rgba(20,20,24,0.15);
+    --accent:#5b45e0; --accent-fg:#ffffff; --accent-soft:#eeebfd; --accent-soft-fg:#4c3aca;
+    --danger:#b3261e; --danger-soft:#fbeeed; --danger-soft-fg:#a5301f;
+    --success:#1f6b4a; --success-soft:#edf5f1;
+    --sev-mayor:#b3261e; --sev-moderada:#8a5a12; --sev-menor:#6b7280; --sev-bloqueante:#b3261e;
+    --type-riesgo:#8a5a12; --type-hipotesis:#5b4e86; --type-convencion:#1f6b4a; --type-preferencia:#6b7280; --type-incumplimiento:#b3261e;
+    --radius-sm:7px; --radius-md:10px; --radius-lg:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:760px; margin:0 auto; padding:48px 24px 96px; }
+
+  .doc-header{ margin-bottom:44px; }
+  .doc-eyebrow{ font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin:0 0 10px; }
+  .doc-header h1{ font-size:26px; font-weight:650; letter-spacing:-0.01em; margin:0 0 12px; }
+  .doc-header p{ font-size:14.5px; line-height:1.6; color:var(--ink-soft); margin:0; max-width:60ch; }
+
+  .change-list{ margin:28px 0 0; padding:18px 20px; background:var(--paper-raised); border:1px solid var(--rule); border-radius:var(--radius-md); }
+  .change-list h2{ font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px; }
+  .change-list ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .change-list li{ font-size:13px; line-height:1.5; color:var(--ink-soft); padding-left:16px; position:relative; }
+  .change-list li::before{ content:"—"; position:absolute; left:0; color:var(--ink-faint); }
+  .change-list li strong{ color:var(--ink); font-weight:600; }
+
+  .states{ margin-top:48px; display:flex; flex-direction:column; gap:36px; }
+  .state-block{ }
+  .state-label{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; }
+  .state-number{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+    border-radius:50%; background:var(--ink); color:var(--paper); font-size:10.5px; font-weight:700;
+  }
+  .state-title{ font-size:13px; font-weight:650; }
+  .state-sub{ font-size:12px; color:var(--ink-faint); }
+
+  /* ---- card ---- */
+  .insight-card{
+    background:var(--paper-raised); border:1px solid var(--rule); border-radius:var(--radius-md);
+    padding:16px 18px; transition:opacity .15s ease, background .15s ease;
+  }
+  .insight-card.is-reviewed{ background:var(--paper-sunken); }
+  .card-head{ display:flex; align-items:flex-start; gap:10px; }
+
+  .card-check{ display:flex; align-items:center; padding-top:2px; cursor:pointer; }
+  .card-check input{ position:absolute; opacity:0; width:18px; height:18px; margin:0; cursor:pointer; }
+  .check-box{
+    width:16px; height:16px; border-radius:5px; border:1.5px solid var(--rule-strong);
+    background:var(--paper-raised); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .card-check input:checked + .check-box{ background:var(--accent); border-color:var(--accent); }
+  .check-box svg{ opacity:0; transform:scale(.6); transition:opacity .12s ease, transform .12s ease; }
+  .card-check input:checked + .check-box svg{ opacity:1; transform:scale(1); }
+
+  .card-title{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding-top:1px; }
+  .card-category{ font-size:13px; font-weight:600; color:var(--ink); }
+  .is-reviewed .card-category{ color:var(--ink-soft); }
+  .reviewed-tag{ font-size:10px; font-weight:650; color:var(--success); display:none; align-items:center; gap:4px; }
+  .is-reviewed .reviewed-tag{ display:inline-flex; }
+
+  .card-signal{ flex-shrink:0; }
+  .severity-pill{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:650;
+    padding:3px 9px 3px 7px; border-radius:20px; border:1px solid; white-space:nowrap;
+  }
+  .severity-pill .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  .sev-mayor{ color:var(--sev-mayor); border-color:rgba(179,38,30,0.3); background:transparent; }
+  .sev-moderada{ color:var(--sev-moderada); border-color:rgba(138,90,18,0.3); background:transparent; }
+  .sev-menor{ color:var(--sev-menor); border-color:rgba(107,114,128,0.28); background:transparent; }
+  .sev-bloqueante{ color:#fff; border-color:var(--danger); background:var(--danger); }
+  .is-reviewed .severity-pill{ filter:grayscale(0.55) opacity(0.7); }
+
+  .card-actions{ display:flex; align-items:center; gap:2px; flex-shrink:0; margin-left:2px; }
+  .ghost-icon-btn{
+    display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+    border-radius:var(--radius-sm); border:1px solid transparent; background:transparent; color:var(--ink-faint);
+    cursor:pointer; padding:0;
+  }
+  .ghost-icon-btn:hover{ background:var(--paper-sunken); color:var(--ink); }
+  .overflow-item{
+    display:flex; align-items:center; gap:9px; width:100%; text-align:left; background:transparent; border:none;
+    font-family:inherit; font-size:12.5px; color:var(--ink); padding:8px 9px; border-radius:6px; cursor:pointer;
+  }
+  .overflow-item:hover{ background:var(--paper-sunken); }
+  .overflow-item.danger{ color:var(--danger-soft-fg); }
+  .overflow-item.danger:hover{ background:var(--danger-soft); }
+
+  .card-body{ padding:12px 0 0 26px; }
+  .card-issue{ font-size:13.5px; line-height:1.55; margin:0 0 6px; color:var(--ink); }
+  .is-reviewed .card-issue{ color:var(--ink-soft); }
+  .card-rec{ font-size:12.5px; line-height:1.5; margin:0; color:var(--ink-soft); }
+  .rec-label{ font-weight:650; color:var(--ink-faint); margin-right:5px; }
+
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:12px 0 0 26px; padding-top:10px; border-top:1px solid var(--rule); }
+
+  .location-control{ position:relative; }
+  .location-btn{
+    display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:11.5px; font-weight:600;
+    background:transparent; border:1px dashed var(--rule-strong); color:var(--ink-faint);
+    padding:4px 10px 4px 8px; border-radius:20px; cursor:pointer;
+  }
+  .location-btn:hover{ color:var(--ink-soft); border-color:var(--ink-faint); }
+  .location-control[data-state="pin"] .location-btn{
+    border:1px solid var(--accent-soft-fg); background:var(--accent-soft); color:var(--accent-soft-fg);
+  }
+  .location-control[data-state="pinning"] .location-btn{
+    border:1px solid var(--accent); background:var(--accent); color:var(--accent-fg);
+  }
+  .location-menu{
+    position:absolute; bottom:32px; left:0; z-index:5; min-width:140px;
+    background:var(--paper-raised); border:1px solid var(--rule-strong); border-radius:var(--radius-sm);
+    box-shadow:0 6px 20px rgba(20,20,24,0.14); padding:5px; display:flex; flex-direction:column; gap:1px;
+  }
+
+  .details-toggle{
+    display:inline-flex; align-items:center; gap:4px; font-family:inherit; font-size:11.5px; font-weight:600;
+    background:transparent; border:none; color:var(--ink-faint); cursor:pointer; padding:4px 2px;
+  }
+  .details-toggle:hover{ color:var(--ink-soft); }
+  .details-toggle svg{ transition:transform .15s ease; }
+  .details-toggle.is-open svg{ transform:rotate(180deg); }
+
+  .card-details{ margin:10px 0 0 26px; padding:10px 12px; background:var(--paper-sunken); border-radius:var(--radius-sm); display:flex; flex-direction:column; gap:8px; }
+  .detail-principle{
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:10.5px; color:var(--ink-faint);
+    text-transform:uppercase; letter-spacing:0.03em; margin:0;
+  }
+  .detail-tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .type-chip, .heuristic-chip, .confidence-chip{
+    font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; border:1px solid var(--rule-strong); color:var(--ink-soft); background:var(--paper-raised);
+  }
+  .type-incumplimiento{ color:var(--type-incumplimiento); border-color:rgba(179,38,30,0.28); }
+  .type-riesgo{ color:var(--type-riesgo); border-color:rgba(138,90,18,0.28); }
+  .type-hipotesis{ color:var(--type-hipotesis); border-color:rgba(91,78,134,0.28); }
+
+  /* edit mode */
+  .card-edit{ padding:12px 0 0 26px; display:flex; flex-direction:column; gap:10px; }
+  .edit-field{ display:flex; flex-direction:column; gap:5px; }
+  .edit-field span{ font-size:11px; font-weight:650; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.03em; }
+  .edit-field textarea{
+    font-family:inherit; font-size:13px; padding:8px 10px; border-radius:var(--radius-sm);
+    border:1px solid var(--rule-strong); resize:vertical; color:var(--ink); background:var(--paper-raised);
+  }
+  .edit-actions{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .edit-actions-right{ display:flex; gap:8px; }
+  .btn{ font-family:inherit; font-size:12.5px; font-weight:650; padding:7px 13px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid var(--rule-strong); background:var(--paper-raised); color:var(--ink); }
+  .btn:hover{ background:var(--paper-sunken); }
+  .btn-primary{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .btn-primary:hover{ background:#000; }
+  .btn-ghost-danger{
+    display:inline-flex; align-items:center; gap:6px; background:transparent; border:1px solid transparent; color:var(--danger-soft-fg);
+  }
+  .btn-ghost-danger:hover{ background:var(--danger-soft); border-color:transparent; }
+
+  [hidden]{ display:none !important; }
+
+  /* ---- score summary ---- */
+  .score-summary{ background:var(--paper-raised); border:1px solid var(--rule); border-radius:var(--radius-md); padding:18px 20px; margin-bottom:14px; }
+  .score-main{ display:flex; align-items:center; gap:16px; }
+  .score-total{ line-height:1; background:var(--ink); color:var(--paper); border-radius:var(--radius-md); padding:10px 14px; text-align:center; min-width:64px; flex-shrink:0; }
+  .score-total-number{ font-size:22px; font-weight:650; letter-spacing:-0.01em; }
+  .score-total-max{ font-size:11.5px; opacity:.8; }
+  .score-main-text{ flex:1; display:flex; flex-direction:column; gap:6px; }
+  .score-verdict{ font-size:13.5px; color:var(--ink-soft); margin:0; line-height:1.4; }
+  .score-toggle{ align-self:flex-start; display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11.5px; font-weight:650; color:var(--accent); background:transparent; border:none; cursor:pointer; padding:2px 0; }
+  .score-toggle svg{ transition:transform .15s ease; }
+  .score-toggle.is-open svg{ transform:rotate(180deg); }
+  .score-detail{ margin-top:16px; padding-top:16px; border-top:1px solid var(--rule); display:flex; flex-direction:column; gap:14px; }
+  .score-block-head{ display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:650; margin-bottom:4px; }
+  .score-block-head span:last-child{ font-family:"SF Mono",Menlo,Consolas,monospace; font-weight:600; color:var(--ink-soft); }
+  .score-block-explain{ font-size:12px; color:var(--ink-faint); margin:0 0 6px; line-height:1.4; }
+  .score-block-track{ height:5px; background:var(--paper-sunken); border-radius:3px; overflow:hidden; }
+  .score-block-fill{ height:100%; border-radius:3px; background:var(--ink); }
+  .score-fail-note{ font-size:12px; color:var(--danger-soft-fg); background:var(--danger-soft); padding:9px 11px; border-radius:var(--radius-sm); margin:0; line-height:1.4; }
+  .score-methodology-link{ display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--accent); font-weight:650; text-decoration:none; align-self:flex-start; }
+
+  .annot{ margin-top:56px; padding-top:28px; border-top:1px solid var(--rule); }
+  .annot h2{ font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 14px; }
+  .annot ol{ margin:0; padding-left:20px; display:flex; flex-direction:column; gap:10px; }
+  .annot li{ font-size:13px; line-height:1.55; color:var(--ink-soft); }
+  .annot li strong{ color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-header">
+    <p class="doc-eyebrow">Exploración de UI · no conectado a producción</p>
+    <h1>Nuevo componente de insight/hallazgo</h1>
+    <p>Segunda vuelta sobre la exploración: se ocultó el chip de "Bloque A/B/C" (confuso, no aportaba), "Eliminar insight" pasó del menú «⋮» a un botón terciario dentro del modo edición, y sumé una versión simplificada del resumen de puntaje con un "ver más" para entender el desglose. Los estados de abajo son interactivos — hacé clic en el checkbox, en el control de ubicación, en «Detalles» y en «Editar» para ver las transiciones. El contenido es de relleno; lo que importa es la estructura.</p>
+  </div>
+
+  <div class="change-list">
+    <h2>Qué cambia respecto al componente actual</h2>
+    <ul>
+      <li><strong>Se elimina el riel/borde rojo izquierdo</strong> — la severidad ahora vive en una sola píldora (punto de color + texto), no en dos señales redundantes (borde + badge).</li>
+      <li><strong>Se oculta el chip "Bloque A/B/C"</strong> — confirmaste que no suma y confunde, así que ya no aparece en la tarjeta. Sigue existiendo como dato interno (alimenta el desglose de puntaje de abajo), solo que ya no se muestra acá.</li>
+      <li><strong>Un solo control de ubicación</strong> reemplaza los 3 elementos actuales (badge de número + botón de pin + botón de quitar). Cambia de forma según el estado: botón fantasma cuando no hay marca, chip lleno con el número cuando sí la hay, y al hacer clic sobre el chip abre «Reubicar / Quitar marca» — nunca hay más de un control visible a la vez.</li>
+      <li><strong>Edición pierde peso visual</strong> — pasa de un botón con borde a un ícono fantasma, mismo tamaño que el resto de acciones secundarias.</li>
+      <li><strong>"Eliminar insight" vive dentro del modo edición</strong> — al tocar «Editar» aparece como botón terciario (texto rojo, sin relleno) a la izquierda de «Cancelar» / «Guardar». Ya no hay menú «⋮»: con la eliminación movida ahí adentro, el overflow quedaba vacío y era un clic de más.</li>
+      <li><strong>La cita técnica (principio/fuente), el tipo, la heurística y la confianza</strong> — antes 3-4 elementos siempre visibles compitiendo con la señal de severidad — ahora viven agrupados detrás de un disclosure «Detalles», colapsado por defecto.</li>
+      <li><strong>Ya no aparece la palabra «Violación»</strong> — el tipo se muestra (dentro de Detalles) como «Incumplimiento», más neutral y menos acusatorio para quien recibe el reporte. Es una propuesta de copy, no una decisión tomada — abajo dejo la pregunta abierta.</li>
+      <li><strong>Checkbox rediseñado</strong> — pasa de un input nativo suelto a un control cuadrado con check animado, para que "marcar como revisado" se sienta como una acción de estado (como un tracker de tareas), no como un formulario.</li>
+    </ul>
+  </div>
+
+  <div class="states">
+
+    <div class="state-block">
+      <div class="state-label"><span class="state-title">Bonus: resumen de puntaje simplificado</span><span class="state-sub">— reemplaza las 3 barras siempre visibles; hacé clic en «Ver desglose»</span></div>
+      <div class="score-summary" data-score>
+        <div class="score-main">
+          <div class="score-total">
+            <span class="score-total-number">78</span><span class="score-total-max">/100</span>
+          </div>
+          <div class="score-main-text">
+            <p class="score-verdict">3 hallazgos mayores pendientes, ninguno bloqueante.</p>
+            <button class="score-toggle" data-action="score-toggle">
+              <span>Ver desglose</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="score-detail" data-score-detail hidden>
+          <div class="score-block-row">
+            <div class="score-block-head"><span>Usabilidad y arquitectura</span><span>38/50</span></div>
+            <p class="score-block-explain">Qué tan fácil es entender y completar la tarea. Si baja de 30/50, la crítica queda marcada como fallo crítico sin importar el resto.</p>
+            <div class="score-block-track"><div class="score-block-fill" style="width:76%"></div></div>
+          </div>
+          <div class="score-block-row">
+            <div class="score-block-head"><span>Consistencia sistémica</span><span>24/30</span></div>
+            <p class="score-block-explain">Coherencia interna: mismos patrones y componentes usados de la misma forma en toda la pantalla.</p>
+            <div class="score-block-track"><div class="score-block-fill" style="width:80%"></div></div>
+          </div>
+          <div class="score-block-row">
+            <div class="score-block-head"><span>Dirección de arte</span><span>16/20</span></div>
+            <p class="score-block-explain">Tipografía, color y jerarquía visual — el acabado estético sobre la base ya usable.</p>
+            <div class="score-block-track"><div class="score-block-fill" style="width:80%"></div></div>
+          </div>
+          <a class="score-methodology-link" href="#">Cómo evaluamos el puntaje completo →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-block">
+      <div class="state-label"><span class="state-number">1</span><span class="state-title">Estado normal</span><span class="state-sub">— hallazgo sin revisar, sin ubicar</span></div>
+      <div class="insight-card" data-card>
+        <div class="card-head">
+          <label class="card-check">
+            <input type="checkbox" data-check />
+            <span class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </label>
+          <div class="card-title">
+            <span class="card-category">Claridad del propósito</span>
+            <span class="reviewed-tag"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Revisado</span>
+          </div>
+          <div class="card-signal">
+            <span class="severity-pill sev-mayor"><span class="dot"></span>Mayor</span>
+          </div>
+          <div class="card-actions">
+            <button class="ghost-icon-btn" data-action="edit" title="Editar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body" data-view>
+          <p class="card-issue">El CTA principal «Continuar» no comunica qué pasa al tocarlo — no queda claro si avanza al pago o a otra confirmación intermedia.</p>
+          <p class="card-rec"><span class="rec-label">Recomendación</span>Usar un verbo específico («Ir a pagar») en vez de uno genérico.</p>
+        </div>
+
+        <div class="card-edit" data-edit hidden>
+          <label class="edit-field"><span>Hallazgo</span><textarea rows="2">El CTA principal «Continuar» no comunica qué pasa al tocarlo — no queda claro si avanza al pago o a otra confirmación intermedia.</textarea></label>
+          <label class="edit-field"><span>Recomendación</span><textarea rows="2">Usar un verbo específico («Ir a pagar») en vez de uno genérico.</textarea></label>
+          <div class="edit-actions">
+            <button class="btn btn-ghost-danger" data-action="delete-from-edit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Eliminar insight
+            </button>
+            <div class="edit-actions-right">
+              <button class="btn" data-action="cancel-edit">Cancelar</button>
+              <button class="btn btn-primary" data-action="save-edit">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-foot" data-view>
+          <div class="location-control" data-state="none" data-location>
+            <button class="location-btn" data-action="location">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="location-label">Ubicar en captura</span>
+            </button>
+            <div class="location-menu" hidden data-location-menu>
+              <button class="overflow-item" data-action="relocate">Reubicar</button>
+              <button class="overflow-item danger" data-action="remove-pin">Quitar marca</button>
+            </div>
+          </div>
+          <button class="details-toggle" data-action="details">
+            <span>Detalles</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+
+        <div class="card-details" data-details hidden>
+          <p class="detail-principle">Heurística de Nielsen #1 · Visibilidad del estado del sistema</p>
+          <div class="detail-tags">
+            <span class="type-chip type-riesgo">Riesgo</span>
+            <span class="heuristic-chip">N1 · Visibilidad del estado</span>
+            <span class="confidence-chip">Confianza alta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-block">
+      <div class="state-label"><span class="state-number">2</span><span class="state-title">Estado revisado</span><span class="state-sub">— checkbox marcado, el contenido baja de énfasis</span></div>
+      <div class="insight-card is-reviewed" data-card>
+        <div class="card-head">
+          <label class="card-check">
+            <input type="checkbox" data-check checked />
+            <span class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </label>
+          <div class="card-title">
+            <span class="card-category">Consistencia y sistema de diseño</span>
+            <span class="reviewed-tag"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Revisado</span>
+          </div>
+          <div class="card-signal">
+            <span class="severity-pill sev-moderada"><span class="dot"></span>Moderada</span>
+          </div>
+          <div class="card-actions">
+            <button class="ghost-icon-btn" data-action="edit" title="Editar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body" data-view>
+          <p class="card-issue">Los botones secundarios usan tres estilos de borde distintos dentro de la misma pantalla.</p>
+          <p class="card-rec"><span class="rec-label">Recomendación</span>Unificar a un solo estilo de botón secundario del sistema.</p>
+        </div>
+
+        <div class="card-edit" data-edit hidden>
+          <label class="edit-field"><span>Hallazgo</span><textarea rows="2">Los botones secundarios usan tres estilos de borde distintos dentro de la misma pantalla.</textarea></label>
+          <label class="edit-field"><span>Recomendación</span><textarea rows="2">Unificar a un solo estilo de botón secundario del sistema.</textarea></label>
+          <div class="edit-actions">
+            <button class="btn btn-ghost-danger" data-action="delete-from-edit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Eliminar insight
+            </button>
+            <div class="edit-actions-right">
+              <button class="btn" data-action="cancel-edit">Cancelar</button>
+              <button class="btn btn-primary" data-action="save-edit">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-foot" data-view>
+          <div class="location-control" data-state="none" data-location>
+            <button class="location-btn" data-action="location">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="location-label">Ubicar en captura</span>
+            </button>
+            <div class="location-menu" hidden data-location-menu>
+              <button class="overflow-item" data-action="relocate">Reubicar</button>
+              <button class="overflow-item danger" data-action="remove-pin">Quitar marca</button>
+            </div>
+          </div>
+          <button class="details-toggle" data-action="details">
+            <span>Detalles</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+
+        <div class="card-details" data-details hidden>
+          <p class="detail-principle">Ley de Jakob · Consistencia interna del sistema</p>
+          <div class="detail-tags">
+            <span class="type-chip type-incumplimiento">Incumplimiento</span>
+            <span class="confidence-chip">Confianza media</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-block">
+      <div class="state-label"><span class="state-number">3</span><span class="state-title">Estado con ubicación</span><span class="state-sub">— un solo chip representa la marca; clic abre reubicar/quitar</span></div>
+      <div class="insight-card" data-card>
+        <div class="card-head">
+          <label class="card-check">
+            <input type="checkbox" data-check />
+            <span class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </label>
+          <div class="card-title">
+            <span class="card-category">Color y contraste</span>
+            <span class="reviewed-tag"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Revisado</span>
+          </div>
+          <div class="card-signal">
+            <span class="severity-pill sev-bloqueante"><span class="dot"></span>Bloqueante</span>
+          </div>
+          <div class="card-actions">
+            <button class="ghost-icon-btn" data-action="edit" title="Editar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body" data-view>
+          <p class="card-issue">El texto sobre el banner amarillo tiene un contraste de 2.1:1 — muy por debajo del mínimo de 4.5:1 de WCAG AA.</p>
+          <p class="card-rec"><span class="rec-label">Recomendación</span>Oscurecer el texto o el fondo hasta cumplir el mínimo de contraste.</p>
+        </div>
+
+        <div class="card-edit" data-edit hidden>
+          <label class="edit-field"><span>Hallazgo</span><textarea rows="2">El texto sobre el banner amarillo tiene un contraste de 2.1:1 — muy por debajo del mínimo de 4.5:1 de WCAG AA.</textarea></label>
+          <label class="edit-field"><span>Recomendación</span><textarea rows="2">Oscurecer el texto o el fondo hasta cumplir el mínimo de contraste.</textarea></label>
+          <div class="edit-actions">
+            <button class="btn btn-ghost-danger" data-action="delete-from-edit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Eliminar insight
+            </button>
+            <div class="edit-actions-right">
+              <button class="btn" data-action="cancel-edit">Cancelar</button>
+              <button class="btn btn-primary" data-action="save-edit">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-foot" data-view>
+          <div class="location-control" data-state="pin" data-location>
+            <button class="location-btn" data-action="location">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="location-label">Marcado · #2</span>
+            </button>
+            <div class="location-menu" hidden data-location-menu>
+              <button class="overflow-item" data-action="relocate">Reubicar</button>
+              <button class="overflow-item danger" data-action="remove-pin">Quitar marca</button>
+            </div>
+          </div>
+          <button class="details-toggle" data-action="details">
+            <span>Detalles</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+
+        <div class="card-details" data-details hidden>
+          <p class="detail-principle">WCAG 2.2 AA · 1.4.3 Contraste mínimo</p>
+          <div class="detail-tags">
+            <span class="type-chip type-incumplimiento">Incumplimiento</span>
+            <span class="confidence-chip">Confianza alta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="state-block">
+      <div class="state-label"><span class="state-number">4</span><span class="state-title">Estado en edición</span><span class="state-sub">— reemplaza el cuerpo y el pie por los campos, sin cambiar el marco de la tarjeta</span></div>
+      <div class="insight-card" data-card>
+        <div class="card-head">
+          <label class="card-check">
+            <input type="checkbox" data-check />
+            <span class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </label>
+          <div class="card-title">
+            <span class="card-category">Copy y microcopy</span>
+          </div>
+          <div class="card-signal">
+            <span class="severity-pill sev-menor"><span class="dot"></span>Menor</span>
+          </div>
+          <div class="card-actions">
+            <button class="ghost-icon-btn" data-action="edit" title="Editar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body" data-view hidden>
+          <p class="card-issue">El mensaje de error dice «Algo salió mal» sin indicar qué campo falló.</p>
+          <p class="card-rec"><span class="rec-label">Recomendación</span>Nombrar el campo específico y la acción para resolverlo.</p>
+        </div>
+
+        <div class="card-edit" data-edit>
+          <label class="edit-field"><span>Hallazgo</span><textarea rows="2">El mensaje de error dice «Algo salió mal» sin indicar qué campo falló.</textarea></label>
+          <label class="edit-field"><span>Recomendación</span><textarea rows="2">Nombrar el campo específico y la acción para resolverlo.</textarea></label>
+          <div class="edit-actions">
+            <button class="btn btn-ghost-danger" data-action="delete-from-edit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Eliminar insight
+            </button>
+            <div class="edit-actions-right">
+              <button class="btn" data-action="cancel-edit">Cancelar</button>
+              <button class="btn btn-primary" data-action="save-edit">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-foot" data-view hidden>
+          <div class="location-control" data-state="none" data-location>
+            <button class="location-btn" data-action="location">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="location-label">Ubicar en captura</span>
+            </button>
+            <div class="location-menu" hidden data-location-menu>
+              <button class="overflow-item" data-action="relocate">Reubicar</button>
+              <button class="overflow-item danger" data-action="remove-pin">Quitar marca</button>
+            </div>
+          </div>
+          <button class="details-toggle" data-action="details">
+            <span>Detalles</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+
+        <div class="card-details" data-details hidden>
+          <p class="detail-principle">Steve Krug · Don't Make Me Think — errores específicos</p>
+          <div class="detail-tags">
+            <span class="type-chip type-hipotesis">Hipótesis</span>
+            <span class="confidence-chip">Confianza media</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="annot">
+    <h2>Preguntas abiertas antes de pasar esto a producción</h2>
+    <ol>
+      <li><strong>Copy de "Violación" → "Incumplimiento":</strong> saqué la palabra tal como pediste, pero el reemplazo es una propuesta mía, no un copy validado. Si preferís otra palabra (o directamente ocultar el tipo del todo), lo cambio.</li>
+      <li><strong>Eliminar insight es una funcionalidad nueva:</strong> hoy no existe forma de borrar un hallazgo individual en el código real — solo editar/tildar. Ahora que vive dentro de edición (un paso extra respecto al menú «⋮» de la primera versión) el riesgo de borrado accidental baja, pero igual sumaría un confirm nativo simple antes de persistir el borrado — decime si te alcanza con eso o preferís un segundo clic tipo "¿Seguro?" inline.</li>
+      <li><strong>El chip de "Detalles":</strong> agrupé ahí el principio/fuente, el tipo y la heurística porque competían con la severidad. Si alguno de esos tres te parece que debería quedar siempre visible (por ejemplo, la heurística), lo saco del colapsable.</li>
+      <li><strong>El link "Cómo evaluamos el puntaje completo →"</strong> dentro del desglose es una propuesta de conexión con la página de metodología que ya armamos — hoy no tiene destino real en este mock. Si te gusta, lo conecto a esa vista al momento de implementar.</li>
+      <li><strong>El texto de "veredicto"</strong> ("3 hallazgos mayores pendientes, ninguno bloqueante") es contenido inventado para mostrar la idea — antes de implementarlo hay que definir la regla real de cómo se arma esa frase (¿cuenta hallazgos por severidad? ¿usa el resumen de la IA?).</li>
+      <li><strong>Este mismo patrón aplicaría a los "aciertos" (WinRow):</strong> hoy comparten estructura y estilos con los hallazgos. Si te gusta esta dirección, lo natural es rediseñar WinRow en paralelo para que no quede una mezcla de dos lenguajes visuales en la misma pantalla.</li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+document.querySelectorAll('[data-card]').forEach(card => {
+  const check = card.querySelector('[data-check]');
+  const reviewedTag = card.querySelector('.reviewed-tag');
+
+  check.addEventListener('change', () => {
+    card.classList.toggle('is-reviewed', check.checked);
+  });
+
+  // location control
+  const locationWrap = card.querySelector('[data-location]');
+  const locationBtn = card.querySelector('[data-action="location"]');
+  const locationMenu = card.querySelector('[data-location-menu]');
+  if (locationBtn) {
+    locationBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const state = locationWrap.dataset.state;
+      if (state === 'none') {
+        locationWrap.dataset.state = 'pinning';
+        locationBtn.querySelector('.location-label').textContent = 'Clic en la captura…';
+      } else if (state === 'pinning') {
+        locationWrap.dataset.state = 'pin';
+        locationBtn.querySelector('.location-label').textContent = 'Marcado · #1';
+      } else {
+        document.querySelectorAll('[data-location-menu]').forEach(m => { if (m !== locationMenu) m.hidden = true; });
+        locationMenu.hidden = !locationMenu.hidden;
+      }
+    });
+  }
+  const relocateBtn = card.querySelector('[data-action="relocate"]');
+  if (relocateBtn) relocateBtn.addEventListener('click', () => {
+    locationWrap.dataset.state = 'pinning';
+    locationBtn.querySelector('.location-label').textContent = 'Clic en la captura…';
+    locationMenu.hidden = true;
+  });
+  const removePinBtn = card.querySelector('[data-action="remove-pin"]');
+  if (removePinBtn) removePinBtn.addEventListener('click', () => {
+    locationWrap.dataset.state = 'none';
+    locationBtn.querySelector('.location-label').textContent = 'Ubicar en captura';
+    locationMenu.hidden = true;
+  });
+
+  // details disclosure
+  const detailsBtn = card.querySelector('[data-action="details"]');
+  const detailsPanel = card.querySelector('[data-details]');
+  if (detailsBtn) detailsBtn.addEventListener('click', () => {
+    detailsPanel.hidden = !detailsPanel.hidden;
+    detailsBtn.classList.toggle('is-open', !detailsPanel.hidden);
+  });
+
+  // edit mode
+  const editBtn = card.querySelector('[data-action="edit"]');
+  const editPanel = card.querySelector('[data-edit]');
+  const viewPanels = card.querySelectorAll('[data-view]');
+  const setEditing = (on) => {
+    editPanel.hidden = !on;
+    viewPanels.forEach(p => p.hidden = on);
+  };
+  if (editBtn) editBtn.addEventListener('click', () => setEditing(true));
+  const cancelEdit = card.querySelector('[data-action="cancel-edit"]');
+  const saveEdit = card.querySelector('[data-action="save-edit"]');
+  if (cancelEdit) cancelEdit.addEventListener('click', () => setEditing(false));
+  if (saveEdit) saveEdit.addEventListener('click', () => setEditing(false));
+
+  // eliminar (tertiary, dentro de edición) — demo: pide confirmación simple y hace fade
+  const deleteBtn = card.querySelector('[data-action="delete-from-edit"]');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      card.style.transition = 'opacity .2s ease, transform .2s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.97)';
+      setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'none'; setEditing(false); }, 260);
+    });
+  }
+});
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('[data-location-menu]').forEach(m => m.hidden = true);
+});
+
+// resumen de puntaje — ver desglose
+document.querySelectorAll('[data-score]').forEach(block => {
+  const toggle = block.querySelector('[data-action="score-toggle"]');
+  const detail = block.querySelector('[data-score-detail]');
+  const label = toggle.querySelector('span');
+  toggle.addEventListener('click', () => {
+    detail.hidden = !detail.hidden;
+    toggle.classList.toggle('is-open', !detail.hidden);
+    label.textContent = detail.hidden ? 'Ver desglose' : 'Ocultar desglose';
+  });
+});
+</script>
+</body>
+</html>

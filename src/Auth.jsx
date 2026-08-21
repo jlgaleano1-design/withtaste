@@ -106,7 +106,7 @@ const authStyles = {
     padding: "9px 14px",
     borderRadius: 8,
     border: "none",
-    background: "#5b45e0",
+    background: "#52525b",
     color: "#fff",
     cursor: "pointer",
   },

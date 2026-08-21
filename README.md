@@ -10,7 +10,7 @@ Anthropic del lado del servidor. Ya no corre como artefacto de Claude.ai.
 
 ## Estado del proyecto
 
-**Versión del criterio:** v1.15 (20 ago 2026) — 212 criterios de
+**Versión del criterio:** v1.21 (21 ago 2026) — 225 criterios de
 documentación (categoría 1), 14 heurísticas con pesos contextuales, taxonomía
 de contexto de dos capas (tipo de experiencia + consideraciones), severidad
 de 4 niveles, y una dimensión nueva de Patrones oscuros. Ver

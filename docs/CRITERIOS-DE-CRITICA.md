@@ -1,6 +1,6 @@
 # Criterio de crítica de UI — Bitácora de Crítica UI
 
-**Versión:** 1.15 · **Última actualización:** 20 de agosto de 2026
+**Versión:** 1.21 · **Última actualización:** 21 de agosto de 2026
 **Estado:** vivo — se actualiza cada vez que el equipo aprueba sumar o ajustar una fuente.
 
 Este documento es la fuente de verdad de qué principios usa Claude para evaluar cada
@@ -11,10 +11,10 @@ comportamiento real coincida con lo documentado acá.
 
 ---
 
-## Estado del MVP (v1.15 — consolidado)
+## Estado del MVP (v1.21 — consolidado)
 
 **MVP funcional de punta a punta**, con 4 capas de conocimiento activas antes de
-cada crítica. Flujo: subir → clasificar pantalla → matchear documentación (212
+cada crítica. Flujo: subir → clasificar pantalla → matchear documentación (222
 criterios) + referencias externas de UICrit (mobile-only) + críticas propias ya
 aprobadas → calcular pesos heurísticos por contexto → generar crítica con
 blocks/tipos epistémicos/severidad de 4 niveles/fallo crítico → revisar
@@ -23,14 +23,30 @@ app propia (Vite + React + Vercel + Supabase) — ver `README.md` para el
 estado del despliegue.
 
 **Contenido base:**
-- **212 criterios de documentación (categoría 1)**, curados con workflow de
+- **225 criterios de documentación (categoría 1)**, curados con workflow de
   puntaje ≥9/12 — 70 biblioteca de componentes (batch1) + 57 de escalado inicial
   (batch2) + 29 de la primera ronda de curación (batch3) + 7 de WCAG 2.2 AAA
   (batch4, v1.10) + 16 del catálogo de reglas de Impeccable (batch5, v1.11,
   verificado contra el código fuente real, no de memoria) + 2 del libro de
   Holloway sobre crítica de apps (batch6, v1.12, acceso parcial por paywall)
   + 20 de Brignull/FTC sobre patrones oscuros (batch7, v1.14, dimensión
-  nueva) + 11 de Vercel Design Guidelines (batch8, v1.15). Este número (212)
+  nueva) + 11 de Vercel Design Guidelines (batch8, v1.15) + 4 destilados de
+  la primera crítica propia aprobada por un humano (batch9, v1.16 — primer
+  lote cuya fuente es 100% interna, no un estándar externo) + 1 sobre tope de
+  familias tipográficas por pantalla (batch10, v1.17 — Butterick's Practical
+  Typography + W3C WAI COGA, gap detectado en la propia auditoría del skill
+  de construcción) + 2 sobre accesibilidad de color más allá del ratio WCAG
+  (batch11, v1.18 — APCA como sanity-check adicional en dark mode y
+  sustitución de matices rojo-verde por Okabe & Ito) + 3 sobre gaps de
+  generación (batch12, v1.19 — chartjunk/gráfico decorativo sin valor
+  informativo, leyenda redundante, y línea base de espaciado consistente
+  entre tarjetas hermanas, todos detectados a partir de una crítica dura y
+  real del equipo a una pantalla generada con el skill de construcción) + 3
+  sobre feedback directo de producto tras dogfoodear el skill (batch13,
+  v1.21 — consistencia de estilo de ícono dentro de un mismo set, serif como
+  connotación real y no decisión neutral, y bottom nav fijo por default vs.
+  libertad creativa real).
+  Este número (225)
   es el conteo real verificado contra el código (`SEED_CRITERIA*.length` en
   el `.jsx`, y `EXPECTED_CRITERIA_COUNT` se deriva de esas mismas longitudes,
   no de un número hardcodeado) — versiones anteriores de este documento
@@ -42,12 +58,17 @@ estado del despliegue.
   `docs/research/uicrit-filtered-human-both.json` — solo una muestra
   estratificada está embebida en la app, no el dataset completo, para no
   inflar el bundle). Uso gateado a mobile-only.
-- Círculo de alimentación de categoría 3: críticas propias aprobadas por un humano
-  calibran automáticamente las próximas.
+- Círculo de alimentación de categoría 3, con **dos roles distintos**: (1)
+  críticas propias aprobadas por un humano calibran automáticamente las
+  próximas críticas (`matchPastCritiques`, sin curación, pasa apenas se
+  aprueba algo); (2) opcionalmente, y solo con la misma curación editorial
+  ≥9/12 que cualquier otra fuente, un hallazgo de una crítica aprobada puede
+  destilarse en un criterio atómico permanente de categoría 1 — esto pasó
+  por primera vez en la Ronda 9 (`CRITERIA-BACKLOG.md`, batch9).
 - Categoría 4 (feedback real de clientes): reservada en la taxonomía, sin
   implementar — ver más abajo.
 
-**Gobernanza:** versionado completo v1.0→v1.15 en este documento, taxonomía de 4
+**Gobernanza:** versionado completo v1.0→v1.21 en este documento, taxonomía de 4
 categorías madre (la 4ta reservada), workflow de curación repetible y documentado, estructura de repo
 lista para GitHub.
 
@@ -543,20 +564,28 @@ JSON plano ya no permita.
 
 ---
 
-## 🔵 BALDE 2 — CTA para el futuro (avance real en v1.15)
+## 🔵 BALDE 2 — CTA para el futuro (avance real en v1.21)
 
-- 🟡 **Base de criterios atómicos** — de 65 a **212 registros reales**
+- 🟡 **Base de criterios atómicos** — de 65 a **225 registros reales**
   (verificado contra el código: 70 biblioteca de componentes + 57 de escalado
   inicial + 29 de la primera ronda del workflow de curación + 7 de WCAG 2.2 AAA
   (v1.10) + 16 del catálogo de reglas de Impeccable (v1.11) + 2 del libro de
   Holloway sobre crítica de apps (v1.12) + 20 de Brignull/FTC sobre patrones
-  oscuros (v1.14) + 11 de Vercel Design Guidelines (v1.15)). Objetivo
+  oscuros (v1.14) + 11 de Vercel Design Guidelines (v1.15) + 4 destilados de
+  la primera crítica propia aprobada por un humano (v1.16, primer lote de
+  fuente 100% interna) + 1 sobre tope de familias tipográficas por pantalla
+  (v1.17, Butterick's + W3C WAI COGA) + 2 sobre accesibilidad de color más
+  allá del ratio WCAG (v1.18, APCA + Okabe & Ito) + 3 sobre gaps de
+  generación detectados por una crítica dura y real a una pantalla generada
+  (v1.19, NN/g·Tufte + Cieden) + 3 sobre feedback directo de producto tras
+  dogfoodear el skill (v1.21, UX Movement/UNC + Material Design + UX
+  Collective + UXPin)). Objetivo
   original: 1.500-2.000. **Se adoptó un workflow de curación en vez de
   perseguir el número a la fuerza** (ver `CRITERIA-BACKLOG.md`): encuestar el
   universo completo de cada fuente, puntuar cada candidato 1-3 en
   observabilidad / evidencia / aplicabilidad mobile / accionabilidad (máx 12), y
   promover solo lo que puntúa ≥9/12. Lo que no pasa el corte queda documentado
-  en el backlog, no se pierde. Cada ronda de este tamaño suma ~7-35 criterios
+  en el backlog, no se pierde. Cada ronda de este tamaño suma ~1-35 criterios
   reales — llegar a 1.500-2.000 con este rigor son varias decenas de rondas, no
   una sola sesión.
 - ✅ **Retrieval antes de generar** — funcionando, ahora con tres tipos de
@@ -569,6 +598,9 @@ JSON plano ya no permita.
   la app; dataset completo filtrado preservado en `docs/research/`.
 - ✅ **Circulo de alimentación de categoría 3** — construido y funcionando (ver
   sección de categorías arriba). Solo críticas propias aprobadas por un humano.
+  Desde la Ronda 9 (v1.16) también alimenta, con curación editorial explícita
+  y el mismo corte ≥9/12, la base de criterios permanente (categoría 1) — no
+  solo la calibración automática de futuras críticas.
 - 🔴 **RAG semántico real** (embeddings + vector store) — **replanteado en
   v1.10, luego bloqueado por red.** La premisa de "necesita backend propio" no
   era del todo cierta: al volumen actual (163 criterios) se puede precalcular un
@@ -615,6 +647,134 @@ atómico, arquitectura de sistema completa). Documento producido por otro agente
 ---
 
 ## Historial de versiones
+- **v1.21 (21 ago 2026):** lote 13 de curación de criterios (3 nuevos, sobre
+  la base de 222 → 225), disparado por feedback directo del usuario sobre
+  `dogfood_runa.html`. Promovidos: consistencia de estilo de ícono dentro de
+  un mismo set — no mezclar relleno y outline en el mismo grupo de íconos
+  (UX Movement + estudio UNC, con doble respaldo de la propia especificación
+  de Material Design 1, 12/12); tipografía serif como connotación real, no
+  decisión neutral — reservarla para cuando la marca/categoría la pida, no
+  usarla solo para "no ser sans-serif genérica" (Dora Czerna, UX Collective,
+  10/12); y bottom nav fijo usado por default pese a haber libertad
+  creativa real, cuando podría explorarse una alternativa más distintiva
+  (UXPin, 9/12 — el más débil de los tres, justo en el corte, promovido
+  igual porque el corte es ≥9/12). Los tres se sumaron también a
+  `GENERIC_AI_SLOP_ANTIPATTERNS`. Una cuarta queja (quitar el saludo + día +
+  fecha del header porque no aporta valor cuando el gráfico semanal ya
+  muestra qué día es "hoy") NO generó criterio nuevo — es una instancia más
+  del principio de redundancia ya cubierto por `seed12-001`/`seed12-002`;
+  se aplicó directo en la siguiente iteración sin duplicar cobertura. Ver
+  `CRITERIA-BACKLOG.md`, Ronda 13, para el detalle completo.
+- **v1.20 (21 ago 2026):** auditoría head-of-product del skill de
+  construcción — no un lote de contenido (0 criterios nuevos, sigue en 222).
+  Se probó el skill de verdad en vez de releerlo: un agente sin ningún
+  contexto previo lo usó para construir desde cero la pantalla de inicio de
+  una app ficticia nueva ("Runa", running). El resultado aplicó bien una
+  docena de reglas de rondas anteriores, pero midiendo el contraste real del
+  código se encontró el mismo bug de tinte-pálido-sobre-fondo-pálido de
+  `gen_E_light` reapareciendo en un componente que nunca se había nombrado
+  como ejemplo (un gráfico de barras semanal: 1.62:1 y 1.24:1 medidos,
+  contra un mínimo de 3:1 de WCAG 1.4.11), y una lista de datos
+  ("Actividad reciente") sin ningún wrapper interactivo pese a verse
+  tapeable, mientras todo lo demás de la misma pantalla sí lo tenía. Ambos
+  ya estaban cubiertos por criterios existentes (`seed2-002`, `seed2-006`)
+  — el problema no era de cobertura, era de aplicación: el skill enseña con
+  ejemplos puntuales, no con el principio verificable subyacente. Cambios
+  aplicados al skill de construcción: nueva sección de anti-patrones
+  "Componentes y affordance" (no existía ninguna, pese a ser una de las
+  dimensiones con más criterios); orden core-primero dentro de cada
+  dimensión, motivado por la degradación de atención documentada en
+  contextos largos ("Lost in the Middle", Liu et al. 2023,
+  arxiv.org/abs/2307.03172); y un cierre obligatorio de auto-verificación al
+  final del documento —no en el medio— que pide calcular contraste real en
+  vez de estimarlo (PAL, Gao et al. 2023, arxiv.org/abs/2211.10435) y
+  releer la semántica interactiva de cada lista, con la misma lógica de
+  generar-y-luego-autocriticar que ya usa el motor de crítica de este
+  producto sobre pantallas ajenas (Self-Refine, Madaan et al. 2023,
+  arxiv.org/abs/2303.17651). Ver
+  `AUDIT-skill-de-construccion-head-of-product.md` para el detalle completo,
+  incluyendo por qué NO se promovió un criterio nuevo para ninguno de los
+  dos hallazgos.
+- **v1.19 (21 ago 2026):** lote 12 de curación de criterios (3 nuevos, sobre
+  la base de 219 → 222), disparado por una crítica directa y detallada del
+  usuario a `gen_E_light.html` (un "with-skill" real generado con
+  `skill-construccion-v3.md`, calificado como "de las peores pantallas" que
+  había visto). Se verificó cada queja contra el código real antes de
+  generalizar nada — contraste de botones medido matemáticamente (1.06:1
+  contra un mínimo de 3:1), padding de tarjeta inconsistente confirmado en
+  el CSS (22px vs. 20px en el resto de la pantalla), leyenda redundante y
+  menú inferior sin espacio entre ítems confirmados visualmente — y esos
+  defectos puntuales se arreglaron a mano de inmediato en el archivo antes
+  de destilar los tres que generalizaban bien: gráfico decorativo sin valor
+  informativo/chartjunk (NN/g — Kate Moran, basado en el data-ink ratio de
+  Tufte), leyenda separada que repite un mapeo color→categoría ya mostrado
+  en cada fila (Jakob Nielsen / NN/g — Reduce Redundancy), y línea base de
+  espaciado consistente entre tarjetas y secciones hermanas (sistema de
+  grid de 8pt + regla interno≤externo, Cieden). Un cuarto candidato —
+  espaciado mínimo entre objetivos táctiles adyacentes en un bottom-nav
+  apretado — puntuó 12/12 pero **no se promovió como criterio nuevo**: ya
+  está cubierto por `seed2-003` (WCAG 2.5.8) y `seed4-004` (WCAG AAA 2.5.5);
+  en vez de duplicar, se explicitó el mecanismo de espaciado (círculo de
+  24px de diámetro sin superposición entre objetivos vecinos) directamente
+  en `GENERIC_AI_SLOP_ANTIPATTERNS`. Los 3 criterios nuevos se sumaron
+  también al skill de construcción (sección "Layout y espaciado") — ver
+  `CRITERIA-BACKLOG.md`, Ronda 12, para el detalle completo.
+- **v1.18 (21 ago 2026):** lote 11 de curación de criterios (2 nuevos, sobre
+  la base de 217 → 219), primera investigación con acceso real a la web
+  (WebSearch + WebFetch) enfocada específicamente en accesibilidad de color
+  más allá de los ratios de contraste WCAG ya cubiertos, apuntando a rigor
+  AAA por pedido explícito del equipo. Promovidos: el punto ciego conocido
+  del ratio de contraste WCAG 2.x en dark mode casi-negro, con APCA
+  (Advanced Perceptual Contrast Algorithm, candidato de contraste para WCAG
+  3) como sanity-check adicional — no como reemplazo del umbral normativo
+  (se agregó una entrada en `CRITERION_CONFLICTS` aclarando esto,
+  `seed4-001` vs. `seed11-001`); y la sustitución de matices rojo-verde de
+  tono medio por bermellón/verde azulado/púrpura rojizo para daltonismo
+  (Okabe & Ito — Color Universal Design), explícitamente distinto del
+  criterio ya existente de "no dependas solo del color". Se aprovechó
+  además para spot-check en vivo de `seed4-001` (1.4.6 Contrast Enhanced,
+  confirmado sin cambios) y para re-confirmar con fetch real —no de
+  memoria como en la Ronda 2— que el sub-requisito de color de WCAG 1.4.8
+  sigue sin ser verificable desde una imagen estática. IBM Carbon y
+  Material Design 3 se encuestaron pero no aportaron cobertura nueva (sus
+  umbrales duplican WCAG 1.4.3/1.4.11 ya promovidos) — ver
+  `CRITERIA-BACKLOG.md`, Ronda 11, para el detalle completo.
+- **v1.17 (21 ago 2026):** lote 10 de curación de criterios (1 nuevo, sobre
+  la base de 216 → 217): tope de máximo 2 familias tipográficas por pantalla
+  (una 3ra solo si es monoespaciada para datos tabulares). No vino de
+  encuestar una fuente nueva desde cero, sino de un gap real detectado en la
+  auditoría dark/light del skill de construcción ("Solvo") — las dos
+  pantallas de prueba combinaron 3 familias (serif + sans + mono) porque la
+  regla existente empujaba a variar tipografía por rol sin topar cuántas
+  familias distintas eso podía sumar. Doble fuente verificada por fetch real:
+  Butterick's Practical Typography ("Mixing fonts" — 2 familias tolerables,
+  3 raramente, 4+ casi nunca) y W3C WAI COGA ("Making Content Usable for
+  People with Cognitive and Learning Disabilities", patrón 4.2.3 — misma
+  tipografía para el mismo rol estructural), esto último suma respaldo real
+  de accesibilidad cognitiva, no solo preferencia editorial. Se evaluó un
+  segundo candidato (reservar tipografías decorativas/script para texto no
+  funcional) y se rechazó: la única fuente encontrada contradecía
+  directamente el criterio de números tabulares ya promovido en batch8 (esa
+  fuente desaconseja monoespaciada en general, este producto la exige para
+  montos) — ver `CRITERIA-BACKLOG.md`, Ronda 10, para el detalle completo.
+  Además del criterio nuevo, se actualizó directamente
+  `GENERIC_AI_SLOP_ANTIPATTERNS` (el skill de construcción) con el mismo
+  tope, para que quede explícito donde el modelo lo lee primero.
+- **v1.16 (21 ago 2026):** lote 9 de curación de criterios (4 nuevos, sobre
+  la base de 212 → 216), primer lote destilado de una crítica propia
+  aprobada por un humano (`critique:1787214642880-z4a74l`, "Rappi iOS
+  Payment methods 1") en vez de un estándar/guía externa. Activa por primera
+  vez el segundo rol de la categoría 3 (corpus propio): además de calibrar
+  automáticamente futuras críticas, un hallazgo aprobado puede promoverse a
+  criterio permanente con el mismo corte editorial ≥9/12 que cualquier otra
+  fuente. De los 6 findings de esa crítica, 4 pasaron el corte (control
+  visible para cambiar un estado mostrado, salida explícita en onboarding
+  superpuesto a una tarea de configuración, un overlay no debe tapar datos
+  relevantes de la tarea en curso, consistencia de idioma dentro de la misma
+  vista) y 2 no (uno por no ser observable desde una imagen estática —
+  estaba marcado como hipótesis sin verificar—, otro por duplicar cobertura
+  ya promovida en la Ronda 2 sobre indicadores de progreso en flujos). Ver
+  `CRITERIA-BACKLOG.md`, Ronda 9, para el detalle de puntaje de cada uno.
 - **v1.15 (20 ago 2026):** lote 8 de curación de criterios (11 nuevos, sobre
   la base de 201 → 212), a partir de Vercel Design Guidelines
   (vercel.com/design/guidelines). Pedido explícito del equipo: aunque la

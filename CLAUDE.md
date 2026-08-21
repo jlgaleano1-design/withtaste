@@ -9,7 +9,7 @@ Herramienta de crítica de interfaces asistida por IA: se sube una captura mobil
 (JPG/PNG), Claude la evalúa contra un criterio documentado y versionado, y queda
 como propuesta hasta que una persona del equipo la aprueba, rechaza o edita.
 
-**Estado actual:** MVP funcional de punta a punta, v1.15 (212 criterios de
+**Estado actual:** MVP funcional de punta a punta, v1.21 (225 criterios de
 documentación). Corre como web app propia: Vite + React en Vercel
 (`github.com/jlgaleano1-design/withtaste`, auto-deploy en `main`), Supabase
 como backend (`kv_store` + auth por magic link), y un proxy serverless propio
@@ -21,7 +21,7 @@ primer paso hacia sacarlo de ahí", es donde vive ahora.
 
 - `README.md` — overview, cómo correrlo local, y estado del despliegue.
 - `docs/CRITERIOS-DE-CRITICA.md` — **la fuente de verdad real.** Historial completo
-  de versiones (v1.0→v1.15), taxonomía de 4 categorías (la 4ta reservada,
+  de versiones (v1.0→v1.21), taxonomía de 4 categorías (la 4ta reservada,
   sin implementar), sistema de puntuación, taxonomía de contexto de dos
   capas, 14 heurísticas, decisiones de arquitectura, qué falta ("Balde 2").
   Leelo antes de tocar cualquier lógica de criterio.

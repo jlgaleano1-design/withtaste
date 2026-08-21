@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Upload, ArrowLeft, Check, X, Clock, Loader2, Trash2, ClipboardList, PlusCircle, Pencil, Save, MapPin, ThumbsUp, Download, Lock, ChevronDown } from "lucide-react";
 
-const CRITERIA_VERSION = "v1.15 · 20 ago 2026";
+const CRITERIA_VERSION = "v1.21 · 21 ago 2026";
 
 // Resumen de una línea de qué cambió en la versión vigente — se muestra en el
 // modal de "Descargar skill" para que quede claro que esto es un documento
@@ -9,7 +9,7 @@ const CRITERIA_VERSION = "v1.15 · 20 ago 2026";
 // se bumpea CRITERIA_VERSION, mismo criterio que el historial de versiones en
 // docs/CRITERIOS-DE-CRITICA.md.
 const CRITERIA_LATEST_CHANGE =
-  "Lote 8: 11 criterios de Vercel Design Guidelines (radios anidados, safe areas, números tabulares, paletas para daltonismo, entre otros) — suma a la nueva dimensión 'Patrones oscuros' del lote 7.";
+  "Lote 13: feedback directo del usuario sobre el dogfood de 'Runa' — íconos de bottom nav mezclando relleno y outline dentro del mismo set (UX Movement + estudio UNC + Material Design 1), tipografía serif elegida sin que la categoría de producto la pidiera (Dora Czerna, UX Collective, psicología tipográfica), y bottom nav fijo usado por default pese a haber libertad creativa real para algo más distintivo (UXPin). Los tres investigados con acceso real a la web y promovidos (≥9/12).";
 
 // Semilla real de criterios atómicos, migrados del PDF "UX Component Critique
 // Criteria" (Open UI, WAI-ARIA APG, GOV.UK, Salesforce Lightning, Atlassian,
@@ -383,12 +383,100 @@ const SEED_CRITERIA_BATCH8 = [
   { statement: "Un número y su unidad deberían separarse con un espacio (\"10 MB\", no \"10MB\") — pegarlos hace más lenta la lectura del valor, especialmente en unidades de dos o más caracteres.", dimension: "Tipografía", core: false, contextTags: [], qualityScore: "9/12", evidenceTier: "media", principle: "Vercel Design Guidelines — separación de números y unidades", sourceUrl: "https://vercel.com/design/guidelines" },
 ].map((c, i) => ({ id: `seed8-${String(i + 1).padStart(3, "0")}`, batch: "vercel-guidelines-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
 
+// Ronda 9 (21 de agosto de 2026) — primera crítica propia aprobada por un
+// humano ("Rappi iOS Payment methods 1", critique:1787214642880-z4a74l).
+// Esto es categoría 3 (corpus propio) pasando por primera vez del rol de
+// "calibración de futuras críticas" (matchPastCritiques, automático, sin
+// curación) al rol de "criterio atómico permanente de la documentación"
+// (esto, manual, con el mismo corte ≥9/12 que cualquier otra fuente — ver
+// el comentario en loadApprovedJourneyCritiques y CRITERIA-BACKLOG.md
+// Ronda 9 para el detalle de los 4 promovidos y los 2 no promovidos de
+// esta misma crítica). Los "findings" originales estaban atados a Rappi /
+// pagos; lo que se promueve acá es la regla generalizada detrás de cada
+// hallazgo, no el caso puntual.
+const SEED_CRITERIA_BATCH9 = [
+  { statement: "Cuando una interfaz comunica el valor o estado actual de una configuración (ej. un método de pago predeterminado, un plan activo) sin ofrecer al mismo tiempo un control visible para cambiarlo desde ese mismo lugar, obliga a la persona usuaria a salir del contexto para actuar sobre algo que ya se le mostró — comunicar un estado sin dar el control para modificarlo en el momento es fricción evitable.", dimension: "Claridad del propósito", core: false, contextTags: ["Administrar / configurar", "Alto riesgo"], qualityScore: "11/12", evidenceTier: "alta", principle: "Heurística de Nielsen #1 — visibilidad del estado; Brignull — forced continuity", sourceUrl: "https://www.nngroup.com/articles/ten-usability-heuristics/" },
+  { statement: "Un recorrido de onboarding de varios pasos que se superpone sobre una tarea de configuración o gestión ya existente (no sobre el primer uso de la app) necesita una acción explícita y prominente para salir o saltarlo por completo — de lo contrario convierte una tarea puntual en un flujo secuencial obligatorio.", dimension: "Componentes y affordance", core: false, contextTags: ["Administrar / configurar"], qualityScore: "11/12", evidenceTier: "media-alta", principle: "Fluent 2 — dialog usage; ARIA APG — dialog modal", sourceUrl: "https://fluent2.microsoft.design/components/web/react/core/dialog/usage" },
+  { statement: "En una interfaz con un idioma definido, un valor de dato (ej. el nombre de un método de pago, una categoría) no debería aparecer en un idioma distinto al de las etiquetas y copy que lo rodean — la mezcla de idiomas dentro de la misma vista da la sensación de que el contenido viene de fuentes distintas sin unificar.", dimension: "Copy y microcopy", core: false, contextTags: ["Internacionalización"], qualityScore: "9/12", evidenceTier: "media", principle: "Heurística de Nielsen #2 — coincidencia con el mundo real; GOV.UK — lenguaje claro", sourceUrl: "https://www.gov.uk/guidance/content-design/writing-for-gov-uk" },
+  { statement: "Un elemento superpuesto de ayuda contextual (tooltip, coach mark, popover explicativo) no debería posicionarse de forma que oculte información de la pantalla subyacente relevante para la tarea en curso (ej. un monto, una fila de datos) — si el contenido cubierto importa para decidir, hay que reposicionar o reducir el overlay, no dar por hecho que es temporal.", dimension: "Jerarquía visual", core: false, contextTags: ["Alta densidad"], qualityScore: "11/12", evidenceTier: "media", principle: "Gestalt — región común; Refactoring UI — peso visual", sourceUrl: "https://www.refactoringui.com/" },
+].map((c, i) => ({ id: `seed9-${String(i + 1).padStart(3, "0")}`, batch: "approved-critique-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
+// Ronda 10 (21 de agosto de 2026) — gap detectado por el equipo mirando
+// gen_D/gen_E (auditoría del skill de construcción): las dos pantallas de
+// prueba terminaron combinando 3 familias tipográficas (serif + sans +
+// mono) en una sola pantalla chica, siguiendo al pie de la letra la regla
+// de "variá por rol" del skill sin que nada la topeara. La base no tenía
+// ningún criterio sobre CUÁNTAS familias tipográficas es razonable
+// combinar — se corrige acá. Ver CRITERIA-BACKLOG.md, Ronda 10, para el
+// detalle de puntaje (incluye un candidato relacionado, decorativo/script
+// para texto funcional, evaluado y NO promovido por evidencia insuficiente
+// y por conflicto parcial con "números tabulares" ya promovido en batch8).
+const SEED_CRITERIA_BATCH10 = [
+  { statement: "Una misma pantalla no debería combinar más de 2 familias tipográficas distintas — si hace falta una tercera, que sea exclusivamente una monoespaciada reservada para datos tabulares (montos, códigos), nunca una tercera familia de uso libre. Cada familia adicional multiplica el esfuerzo de reconocer qué elementos pertenecen al mismo sistema visual; la variación de rol (display / cuerpo / dato) se logra primero con tamaño, peso y tracking dentro de 1-2 familias, no sumando una familia nueva por cada rol.", dimension: "Tipografía", core: true, contextTags: ["Accesibilidad"], qualityScore: "12/12", evidenceTier: "alta", principle: "Butterick's Practical Typography — mixing fonts; W3C WAI COGA — diseño visual consistente (patrón 4.2.3)", sourceUrl: "https://practicaltypography.com/mixing-fonts.html" },
+].map((c, i) => ({ id: `seed10-${String(i + 1).padStart(3, "0")}`, batch: "typography-family-count-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
+// Ronda 11 (21 de agosto de 2026) — accesibilidad de color, más allá del
+// ratio de contraste WCAG que ya teníamos (1.4.3/1.4.6/1.4.11). Investigado
+// con acceso real a la web (papers + documentación de UI, no de memoria):
+// APCA (candidato de contraste para WCAG 3, git.apcacontrast.com) y el
+// paper clásico de Okabe & Ito sobre daltonismo (jfly.uni-koeln.de/color/).
+// Ver CRITERIA-BACKLOG.md, Ronda 11, para el detalle de fuentes encuestadas
+// (incluye IBM Carbon y WCAG 1.4.8, encuestadas pero sin cobertura nueva) y
+// el motivo de por qué solo 2 candidatos pasaron el corte.
+const SEED_CRITERIA_BATCH11 = [
+  { statement: "El ratio de contraste de WCAG 2.x (el que usan 1.4.3/1.4.6/1.4.11) tiene un punto ciego conocido en dark mode: sobrestima el contraste real cuando uno de los dos colores es casi negro, al punto de que un par que técnicamente pasa 4.5:1 o incluso 7:1 puede leerse como funcionalmente ilegible. Si el fondo es casi negro, no te quedes solo con que el ratio WCAG da bien — verificá también con APCA (Lc, el método candidato para WCAG 3) o a ojo, en particular para texto secundario/terciario de baja opacidad sobre fondo oscuro.", dimension: "Color y contraste", core: false, contextTags: ["Accesibilidad"], qualityScore: "11/12", evidenceTier: "media-alta", principle: "APCA (Advanced Perceptual Contrast Algorithm) — candidato de contraste para WCAG 3", sourceUrl: "https://git.apcacontrast.com/documentation/APCA_in_a_Nutshell.html" },
+  { statement: "Al elegir qué colores usar para diferenciar categorías, series o estados, evitá la combinación rojo-verde de saturación/tono medio — es la más común de confundir para daltonismo rojo-verde (deuteranopia/protanopia), que afecta a una porción real de la población. Preferí sustituciones con más separación perceptual real entre sí: bermellón en vez de rojo puro, verde azulado en vez de verde puro, púrpura rojizo en vez de violeta. Esto es distinto de \"no depender solo del color\" (ya cubierto en otro criterio) — es sobre CUÁLES matices elegir cuando sí vas a usar color, no sobre si sumar un canal redundante.", dimension: "Color y contraste", core: true, contextTags: ["Accesibilidad", "Dashboard / datos densos", "Monitorear / analizar"], qualityScore: "12/12", evidenceTier: "alta", principle: "Okabe & Ito — Color Universal Design", sourceUrl: "https://jfly.uni-koeln.de/color/" },
+].map((c, i) => ({ id: `seed11-${String(i + 1).padStart(3, "0")}`, batch: "color-accessibility-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
+// Ronda 12 (21 ago 2026) — disparada por la crítica del usuario a gen_E_light:
+// un gráfico decorativo sin valor informativo (sparkline sin eje ni label), una
+// leyenda que repetía el mismo mapeo color→nombre que ya mostraba cada fila, y
+// un padding de tarjeta que rompía la línea base de espaciado del resto de la
+// pantalla (22px vs. 20px en todo lo demás — la causa real de "todo nace de un
+// lugar distinto"). Se investigó con acceso real a la web: NN/g (Kate Moran,
+// basado en el data-ink ratio de Tufte), NN/g/Nielsen sobre decisiones de
+// diseño duplicadas, y Cieden sobre el sistema de grid de 8pt + regla
+// interno≤externo. El tamaño mínimo de objetivo táctil (2.5.8/2.5.5) que
+// también falló en gen_E_light NO generó un criterio nuevo — ya está cubierto
+// por seed2-003 y seed4-004; en cambio se explicitó el mecanismo de espaciado
+// entre objetivos adyacentes directamente en los anti-patrones más abajo. Ver
+// CRITERIA-BACKLOG.md, Ronda 12, para el detalle completo.
+const SEED_CRITERIA_BATCH12 = [
+  { statement: "Un elemento gráfico decorativo que representa una tendencia o dato (ej. un sparkline sin eje ni etiquetas) solo se justifica si aporta información que el texto no da. Si el mismo dato ya se comunica con un número y una etiqueta clara (ej. \"+4% este mes vs. mes anterior\"), un gráfico adicional sin escala ni contexto no suma comprensión — solo ocupa espacio y se lee como relleno. Eliminá cualquier elemento de datos que se vuelva redundante una vez que el resto de la información ya está presente; no lo agregues porque \"los dashboards tienen gráficos\".", dimension: "Jerarquía visual", core: true, contextTags: ["Dashboard / datos densos"], qualityScore: "11/12", evidenceTier: "alta", principle: "NN/g (Kate Moran) — Clutter-Free, basado en el data-ink ratio de Tufte", sourceUrl: "https://www.nngroup.com/articles/clutter-charts/" },
+  { statement: "Si cada fila o elemento de una lista de datos ya muestra su propia etiqueta y color (ej. un punto de color + nombre de categoría en cada fila de una tabla de gastos), no agregues además una leyenda separada que repita exactamente el mismo mapeo color→nombre en otro lugar de la misma pantalla. Duplicar una decisión de diseño que ya está resuelta en otro lugar no reduce la carga cognitiva, la aumenta: la persona usuaria tiene que reconciliar dos representaciones del mismo dato en vez de una, y buena parte no percibe la duplicación como intencional sino como ruido o error de diseño.", dimension: "Jerarquía visual", core: true, contextTags: ["Dashboard / datos densos"], qualityScore: "11/12", evidenceTier: "media-alta", principle: "Jakob Nielsen / NN/g — Reduce Redundancy: Decrease Duplicated Design Decisions", sourceUrl: "https://www.nngroup.com/articles/reduce-redundancydecrease-duplicated-design-decisions/" },
+  { statement: "Definí un único valor base de espaciado para toda la pantalla (ej. múltiplos de 8: 8/16/20/24/32px) y usalo de forma consistente en el padding y margin de tarjetas, secciones y contenedores hermanos. Si el margen externo estándar de la pantalla es 20px, el padding interno de una tarjeta puntual no debería ser 22px \"porque se veía mejor\" ahí. Como regla práctica, el espacio externo (margin) de un elemento debería ser igual o mayor al espacio interno (padding) que usa. Mezclar líneas base de espaciado sin motivo dentro de la misma pantalla se percibe como que \"todo nace de un lugar distinto\", aunque cada valor individual sea razonable.", dimension: "Espaciado y alineación", core: true, contextTags: [], qualityScore: "10/12", evidenceTier: "media", principle: "Sistema de grid de 8pt + regla interno ≤ externo (Cieden — Spacing best practices)", sourceUrl: "https://cieden.com/book/sub-atomic/spacing/spacing-best-practices" },
+].map((c, i) => ({ id: `seed12-${String(i + 1).padStart(3, "0")}`, batch: "post-critique-generation-gaps-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
+// Ronda 13 (21 ago 2026) — disparada por feedback directo del usuario sobre
+// el dogfood de "Runa" (dogfood_runa.html): el ícono de "Inicio" del bottom
+// nav estaba relleno mientras el resto del set era outline (inconsistencia
+// de estilo dentro del mismo grupo de íconos), la tipografía serif elegida
+// para una app de running se sentía "extraña" sin que hubiera un motivo de
+// marca/categoría detrás, y el patrón de navegación (bottom nav fijo) se
+// sintió como el más genérico posible pese a que el brief daba libertad
+// creativa total. Investigado con acceso real a la web: UX Movement +
+// estudio de UNC sobre mezcla de estilos de ícono, Material Design 1 sobre
+// consistencia de trazo/relleno dentro de un set, un artículo de UX
+// Collective (Dora Czerna) sobre psicología tipográfica y ajuste de
+// categoría, y un análisis de UXPin sobre el patrón de tab bar inferior.
+const SEED_CRITERIA_BATCH13 = [
+  { statement: "Todos los íconos de un mismo set que se usan juntos en una interfaz (ej. los 5 íconos de un bottom nav, o los íconos de una barra de acciones) deben compartir el mismo tratamiento visual — o todos outline/stroke, o todos con relleno sólido, con el mismo grosor de trazo y el mismo radio de esquina. No dejes un ícono relleno (ej. el de la sección activa) mientras el resto del set queda en outline sin que eso responda a un sistema deliberado y aplicado a los 5 estados, no solo al que se ve por defecto. Para diferenciar el estado activo del inactivo, preferí variar color y/o peso/opacidad dentro del MISMO estilo base, no cambiar de estilo (outline↔relleno) para un solo ítem del set.", dimension: "Consistencia y sistema de diseño", core: true, contextTags: [], qualityScore: "12/12", evidenceTier: "alta", principle: "UX Movement / estudio UNC — Filled-in vs. Outline Icons; Material Design 1 — Style/Icons (grosor de trazo y relleno consistentes dentro de un set)", sourceUrl: "https://uxmovement.com/mobile/solid-vs-outline-icons-which-are-faster-to-recognize/" },
+  { statement: "Una tipografía serif no es una decisión de dirección de arte neutral — trae consigo una connotación real (editorial, tradición, lujo, formalidad) que puede reforzar una marca o chocar con ella. Reservala para cuando la marca/brief la pida explícitamente, o cuando la categoría de producto ya se asocia culturalmente con esa connotación (editorial, finanzas/confianza tradicional, lujo, publishing). Para categorías con una convención contraria fuerte y establecida (deporte/fitness, gaming, herramientas tech-nativas, salud/wellness activo), una serif sin justificación no se lee como una elección audaz — se lee como un desajuste, aunque la intención haya sido evitar la sans-serif genérica por default.", dimension: "Tipografía", core: true, contextTags: [], qualityScore: "10/12", evidenceTier: "media-alta", principle: "Dora Czerna, UX Collective — psicología tipográfica y ajuste de categoría de marca", sourceUrl: "https://uxdesign.cc/getting-type-sensitive-with-the-psychology-of-fonts-8e8758d70433" },
+  { statement: "El bottom nav fijo de solo-ícono es uno de los patrones de navegación mobile más estandarizados y reconocibles que existen — es una elección segura y probada (Ley de Jakob), pero también la opción de menor riesgo/menor distintividad posible. Cuando el brief da libertad creativa real (marca nueva, sin base de usuarios ya entrenada en un patrón específico, sin restricción de plataforma nativa que lo exija), no lo uses por default sin considerar al menos una alternativa más distintiva para ESE producto puntual (agrupación distinta, ubicación distinta, forma no rectangular, navegación gestual, un FAB con panel contextual, etc.) — evaluá el trade-off explícitamente en vez de ir al patrón más común porque es el que menos fricción de diseño implica. Esto no contradice usar convención de plataforma cuando el contexto la exige (ver nota sobre convención en el rubric de crítica) — es específicamente sobre qué hacer cuando SÍ hay libertad y no se está aprovechando.", dimension: "Jerarquía visual", core: false, contextTags: ["Marketing / landing", "Exploración / descubrimiento"], qualityScore: "9/12", evidenceTier: "media", principle: "UXPin (Andrew Martin) — Mobile Navigation Patterns: Pros and Cons", sourceUrl: "https://www.uxpin.com/studio/blog/mobile-navigation-patterns-pros-and-cons/" },
+].map((c, i) => ({ id: `seed13-${String(i + 1).padStart(3, "0")}`, batch: "dogfood-runa-feedback-v1", component: null, contextTags: c.contextTags || [], core: c.core || false, ...c }));
+
 const CRITERION_CONFLICTS = [
   {
     a: "seed-002", // "No preselecciones respuestas... cuando el valor pueda sesgar"
     b: "seed-003", // "Un select de configuración puede tener valor predeterminado..."
     type: "limite-de-contexto",
     note: "No es una contradicción real: seed-002 aplica a preguntas/preferencias donde preseleccionar sesga la respuesta de la persona; seed-003 aplica a configuración donde el valor por defecto representa el estado real del sistema (no una opinión). El modelo debe distinguir 'pregunta' de 'estado del sistema' antes de aplicar cualquiera de las dos.",
+  },
+  {
+    a: "seed4-001", // "1.4.6 Contrast (Enhanced) — WCAG AAA, ratio 7:1 / 4.5:1"
+    b: "seed11-001", // "El ratio de contraste WCAG tiene un punto ciego en dark mode — verificar también con APCA"
+    type: "limite-de-contexto",
+    note: "No es una contradicción: seed4-001 sigue siendo el umbral normativo real (lo que hoy exige WCAG 2.2, y lo que hay que citar como violación formal). seed11-001 es un caveat de aplicación — el ratio WCAG puede dar 'pasa' en dark mode y aun así ser ilegible en la práctica. El modelo debe seguir citando WCAG AAA como el criterio formal, pero usar APCA como sanity-check adicional específicamente cuando el fondo sea casi negro, no como reemplazo del umbral normativo.",
   },
 ];
 
@@ -400,7 +488,9 @@ const CRITERION_CONFLICTS = [
 const EXPECTED_CRITERIA_COUNT =
   SEED_CRITERIA.length + SEED_CRITERIA_BATCH2.length + SEED_CRITERIA_BATCH3.length +
   SEED_CRITERIA_BATCH4.length + SEED_CRITERIA_BATCH5.length + SEED_CRITERIA_BATCH6.length +
-  SEED_CRITERIA_BATCH7.length + SEED_CRITERIA_BATCH8.length;
+  SEED_CRITERIA_BATCH7.length + SEED_CRITERIA_BATCH8.length + SEED_CRITERIA_BATCH9.length +
+  SEED_CRITERIA_BATCH10.length + SEED_CRITERIA_BATCH11.length + SEED_CRITERIA_BATCH12.length +
+  SEED_CRITERIA_BATCH13.length;
 // a comments_source "human" o "both" únicamente (se excluyó "llm" — 1.058 de 11.344
 // comentarios). Namespace separado (external-reference:) — nunca se mezcla con
 // criterion: (documentación) ni con critique: (nuestro corpus propio aprobado).
@@ -3396,6 +3486,11 @@ function seedCriteriaIfNeeded(existingKeys) {
   const batch6Done = existingKeys.some((k) => k.startsWith("criterion:seed6-"));
   const batch7Done = existingKeys.some((k) => k.startsWith("criterion:seed7-"));
   const batch8Done = existingKeys.some((k) => k.startsWith("criterion:seed8-"));
+  const batch9Done = existingKeys.some((k) => k.startsWith("criterion:seed9-"));
+  const batch10Done = existingKeys.some((k) => k.startsWith("criterion:seed10-"));
+  const batch11Done = existingKeys.some((k) => k.startsWith("criterion:seed11-"));
+  const batch12Done = existingKeys.some((k) => k.startsWith("criterion:seed12-"));
+  const batch13Done = existingKeys.some((k) => k.startsWith("criterion:seed13-"));
   const writes = [];
   if (!batch1Done) writes.push(...SEED_CRITERIA.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!batch2Done) writes.push(...SEED_CRITERIA_BATCH2.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
@@ -3405,6 +3500,11 @@ function seedCriteriaIfNeeded(existingKeys) {
   if (!batch6Done) writes.push(...SEED_CRITERIA_BATCH6.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!batch7Done) writes.push(...SEED_CRITERIA_BATCH7.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!batch8Done) writes.push(...SEED_CRITERIA_BATCH8.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch9Done) writes.push(...SEED_CRITERIA_BATCH9.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch10Done) writes.push(...SEED_CRITERIA_BATCH10.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch11Done) writes.push(...SEED_CRITERIA_BATCH11.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch12Done) writes.push(...SEED_CRITERIA_BATCH12.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
+  if (!batch13Done) writes.push(...SEED_CRITERIA_BATCH13.map((c) => window.storage.set(`criterion:${c.id}`, JSON.stringify(c), true)));
   if (!writes.length) return Promise.resolve(false);
   return Promise.all(writes).then(() => true);
 }
@@ -4069,6 +4169,199 @@ function downloadBlob(filename, blob) {
 // SIEMPRE adentro de la skill, nunca ser un "se supone que la usa" sin
 // poder verificarlo. `criteriaRecords` es la lista real ya cargada (no un
 // conteo) para poder listarla entera acá abajo, agrupada por dimensión.
+// Extraído de buildSkillMarkdown para poder reusarlo también en
+// buildGenerationSkillMarkdown — el material del cliente (composiciones,
+// logo, notas) es contexto útil para las dos audiencias (evaluador interno
+// y skill de construcción), la sección en sí no cambia según quién la lea.
+function buildClientMaterialSection(clientMaterialNote) {
+  if (!clientMaterialNote) return "";
+  return [
+    clientMaterialNote.generalFiles.length || clientMaterialNote.hasNotes
+      ? `\n\n## Material del cliente (descargado junto a este archivo)\n\n` +
+        `Este export vino acompañado de material específico del cliente, descargado por separado junto a este .md —\n` +
+        `no es parte de la base curada general, es contexto puntual para este proyecto. Priorizalo por sobre las\n` +
+        `convenciones genéricas de este documento cuando haya conflicto directo (por ejemplo: el design system del\n` +
+        `cliente define su propio radio de borde o su propia escala tipográfica).\n\n` +
+        clientMaterialNote.generalFiles.map((n) => `- ${n}`).join("\n") +
+        (clientMaterialNote.generalFiles.length ? "\n" : "") +
+        (clientMaterialNote.hasNotes ? `- notas-cliente.txt (notas adicionales escritas a mano)\n` : "")
+      : "",
+    clientMaterialNote.compositionFiles.length
+      ? `\n\n## Composiciones de referencia del cliente (pantallas reales, descargadas junto a este archivo)\n\n` +
+        `Estas son pantallas reales del producto del cliente hoy — ${clientMaterialNote.compositionFiles.map((n) => `\`${n}\``).join(", ")}.\n` +
+        `Sirven para calibrar densidad, tono visual y patrones ya existentes del cliente — NO son una plantilla para\n` +
+        `copiar 1:1.\n\n` +
+        `**Jerarquía de autoridad, en caso de conflicto:**\n` +
+        `1. Los criterios y reglas de este documento (arriba) siguen ganando por sobre lo que se ve en estas\n` +
+        `   pantallas — si el cliente ya tiene un patrón que viola un criterio de la base de documentación, no se\n` +
+        `   copia ese patrón solo porque "así lo tienen hoy".\n` +
+        `2. Como referencia visual (estilo, densidad, tono, componentes reales), estas composiciones pesan MÁS que\n` +
+        `   cualquier pantalla del corpus propio de críticas aprobadas (categoría 3) — son evidencia directa del\n` +
+        `   producto actual de este cliente puntual, no un ejemplo genérico de otro proyecto.\n`
+      : "",
+    clientMaterialNote.logoFiles.length
+      ? `\n\n## Logo del cliente\n\n` +
+        `${clientMaterialNote.logoFiles.map((n) => `\`${n}\``).join(", ")} — es el logo real del cliente, descargado junto a este archivo. Usalo\n` +
+        `tal cual donde haga falta un logo: no lo rediseñes, no generes una versión nueva ni una aproximación. Si\n` +
+        `hace falta el color de marca exacto, sacalo de este archivo (se puede correr "Analizar con IA" sobre él\n` +
+        `para obtener ese token de color) — pesa más que cualquier color inferido de una pantalla del corpus\n` +
+        `propio de críticas.\n`
+      : "",
+  ].join("");
+}
+
+// --- Anti-patrones de "se ve hecho por IA" ---------------------------------
+//
+// Contenido nuevo, pensado EXCLUSIVAMENTE para el skill de construcción, no
+// para el evaluador. Origen: en gran parte son las mismas ~16 reglas del
+// catálogo de Impeccable que la ronda de curación de v1.11 evaluó y rechazó
+// a propósito para el criterio de CRÍTICA (ver CRITERIA-BACKLOG.md — se
+// descartaron ahí porque "esto parece hecho por IA" no es una violación
+// normativa válida para juzgar una pantalla real ya construida por un
+// humano). Esa decisión sigue siendo correcta para el evaluador. Pero es
+// exactamente el contenido que le falta al lado de generación — acá se usa
+// tal cual, sumado a lo que documentan Anthropic (frontend-design,
+// web-artifacts-builder) y otras fuentes públicas sobre los mismos defaults
+// visuales repetidos. Confirmado empíricamente: en la auditoría de agosto
+// 2026, las dos pantallas generadas para probar el skill (con y sin skill)
+// cayeron en el mismo default de fondo casi negro + tarjeta con gradiente
+// violeta — exactamente uno de estos patrones, sin que nada en el
+// documento anterior lo mencionara.
+const GENERIC_AI_SLOP_ANTIPATTERNS = `## Anti-patrones de "se ve hecho por IA" (leé esto siempre, antes de diseñar nada)
+
+Esta sección no es sobre usabilidad — es sobre distintividad. Un LLM sin dirección explícita converge una y otra vez en el mismo puñado de decisiones visuales, con o sin criterio de usabilidad de por medio. Evitar estos defaults no es opcional ni es "gusto" — es la diferencia entre un producto que se siente propio y uno que se siente genérico, y el efecto es medible independientemente del puntaje de usabilidad.
+
+**Color y superficie:**
+- Evitá gradiente violeta/azul como accent por defecto (en botones, texto, fondos, "orbs" decorativos) — es el tell más repetido de todos.
+- Evitá glassmorphism decorativo (blur, glass cards, glow en bordes) cuando no resuelve nada funcional.
+- Evitá un borde de acento grueso de un solo color en un lateral de la tarjeta — es el tell individual más reconocible.
+- Evitá halos radiales saturados o "glow" de color sobre fondo oscuro.
+- Evitá fondo crema/beige como default "seguro" — es tan reconocible como el violeta sobre oscuro.
+- Si vas a usar dark mode, no lo combines automáticamente con glows de color — elegí uno u otro con intención, no los dos juntos por default.
+
+**Sistema de color: roles, no solo valores (confirmado por auditoría — ver "gen_C" en el historial de pruebas):**
+- Definí UN color primario/de marca y reusalo consistentemente en los tres lugares donde una persona espera verlo: el logo/mark, las acciones primarias (CTA principal, botón de confirmar), y cualquier estado activo/seleccionado de navegación (tab inferior activo, ítem de menú activo, paso actual de un stepper). Si la marca es verde, el tab activo tiene que ser una variación de ese mismo verde — no un acento secundario (dorado, violeta, lo que sea) que no aparece en ningún otro lugar de la marca. Un color de acento que solo existe para "resaltar la selección" y no para nada más de la identidad visual no tiene ninguna razón semántica de ser ese color puntual — se lee como decisión arbitraria, no como sistema.
+- Si necesitás colores categóricos (tipos de transacción, estados, etiquetas), definí un set chico y fijo (4-6 colores como máximo) donde cada color tenga un significado consistente y — idealmente — explicable en una leyenda de una línea (ej. "verde = ingreso, rojo = gasto esencial, ámbar = gasto discrecional"). No le asignes un color distinto a cada categoría solo porque "hay que diferenciarlas visualmente" — si la persona que usa la interfaz no puede explicar por qué una categoría es de ese color específico, el sistema no tiene roles, tiene ruido.
+- Los colores categóricos y el color primario/de marca ocupan roles distintos y no deberían pisarse: si el primario es verde, evitá reusar exactamente ese mismo verde como una categoría más entre otras — se pierde la distinción entre "esto es de la marca" y "esto es un dato categorizado".
+- Si vas a diferenciar categorías/series con color, evitá la combinación rojo-verde de tono medio (la más común de confundir para daltonismo rojo-verde) — usá bermellón en vez de rojo puro, verde azulado en vez de verde puro, púrpura rojizo en vez de violeta (ver criterio seed11-002). Y si el fondo es casi negro (dark mode), no confíes solo en que un checker de contraste WCAG dé "OK" — ese ratio sobrestima el contraste real sobre negro puro y un texto secundario de baja opacidad puede pasar el número y aun así leerse como ilegible (ver seed11-001).
+
+**Tipografía:**
+- No uses Inter, Geist, Space Grotesk o Instrument Serif por reflejo — elegí una tipografía que la marca o el brief pueda justificar, y si no hay brief, tomá una decisión deliberada y decila.
+- "Deliberada" no significa "cualquier cosa distinta de sans-serif genérica" (ver seed13-002). Una serif trae connotación real (editorial, tradición, lujo, formalidad) — usala cuando la marca/brief la pida explícitamente o cuando la categoría de producto ya se asocia culturalmente con esa connotación (editorial, finanzas/confianza tradicional, lujo, publishing). Para categorías con convención contraria fuerte (deporte/fitness, gaming, herramientas tech-nativas, salud/wellness activo), una serif sin justificación se lee como desajuste, no como una elección audaz — el riesgo de dirección de arte tiene que ser coherente con la categoría, no solo distinto del default.
+- No uses una sola familia tipográfica para toda la pantalla sin ninguna variación de rol (display vs. cuerpo vs. dato) — PERO no combines más de 2 familias distintas para lograr esa variación (una 3ra familia, si hace falta, debe ser exclusivamente monoespaciada y reservada a datos tabulares — nunca una 3ra familia de uso libre para otro rol "expresivo"). Lográ la variación de rol primero con tamaño, peso y tracking dentro de esas 1-2 familias, no sumando una familia nueva por cada rol que se te ocurra — 3+ familias en una pantalla chica se lee como falta de sistema, no como riqueza, y le agrega carga cognitiva real a reconocer qué elementos pertenecen al mismo conjunto (ver criterio seed10-001).
+- No dejes una jerarquía tipográfica plana (tamaños todos parecidos) — la escala tiene que ser evidente de un vistazo.
+- Evitá el patrón "ícono chico en tile redondeado arriba de un heading" — es el template universal de feature card generado por IA.
+- Evitá headline serif itálica gigante como recurso por defecto de hero.
+- Evitá "eyebrow"/"kicker" en mayúsculas chicas arriba de un título — es decorativo, no funcional, y es reconocible al instante.
+
+**Layout y espaciado:**
+- Evitá tarjetas anidadas sin motivo (tarjeta dentro de tarjeta agrega ruido visual, no jerarquía real).
+- Evitá grillas de tarjetas idénticas (mismo tamaño, ícono + heading + texto repetido) cuando el contenido real no es homogéneo.
+- Evitá un único valor de espaciado repetido en toda la pantalla sin ritmo ni variación intencional — pero definí igualmente UNA línea base consistente (múltiplos de 8: 8/16/20/24/32px) para el padding/margin de tarjetas y secciones hermanas. Si el margen externo estándar de la pantalla es 20px, no le pongas 22px de padding interno a una sola tarjeta "porque quedaba mejor" ahí — esa clase de desfase de 1-2px entre componentes hermanos es exactamente lo que se percibe como "todo nace de un lugar distinto" (ver seed12-003).
+- Evitá el layout "número grande + label chico + tres stats de apoyo + accent con gradiente" como respuesta por defecto — solo usalo si de verdad es la mejor opción para ese contenido puntual, no porque sea el patrón más fácil.
+- Cuidado con contenedores de ícono más grandes que el contenido que introducen.
+- No agregues un gráfico decorativo (sparkline sin eje, sin etiquetas, sin escala) al lado de una cifra que ya tiene su variación explicada en texto (ej. "+4% este mes vs. mes anterior") — si el gráfico no aporta información que el texto no dé, es relleno visual, no dato (ver seed12-001).
+- No repitas una leyenda de color→categoría en un lugar separado cuando cada fila/elemento de la lista ya muestra su propio punto de color + nombre de categoría — es la misma decisión de diseño duplicada dos veces en la misma pantalla, y se lee como desorden, no como refuerzo (ver seed12-002).
+- Si vas a usar navegación o toolbars de solo-ícono con varios ítems pegados unos a otros (ej. un bottom nav de 5 tabs), no te quedes solo en que cada ícono individual mida ≥24×24px (WCAG 2.5.8, seed2-003) — agregá además espacio real entre ítems adyacentes. El mecanismo formal es que un círculo de 24px de diámetro centrado en cada objetivo no debe superponerse con el de un objetivo vecino: 5 íconos de ~20px sin gap entre ellos fallan igual, aunque cada uno individualmente pase el mínimo.
+- El bottom nav fijo de solo-ícono es de los patrones de navegación más estandarizados que existen (ver seed13-003) — válido cuando la familiaridad importa más que la distintividad, pero también la opción de menor riesgo posible. Cuando el brief da libertad creativa real (marca nueva, sin base de usuarios ya entrenada en un patrón específico), no lo uses por default sin al menos considerar una alternativa más propia de ESE producto (agrupación distinta, ubicación distinta, forma no rectangular, navegación gestual, un FAB con panel contextual). Esto no es "nunca uses bottom nav" — es "no lo uses en piloto automático cuando tenés margen real para algo más específico".
+
+**Componentes y affordance:**
+- Consistencia de estilo de ícono dentro de un mismo set (ver seed13-001): si vas a usar íconos outline/stroke, TODOS los íconos que aparecen juntos (ej. los 5 de un bottom nav) tienen que ser outline — no dejes uno relleno (típicamente el de la sección "activa") mientras el resto queda en outline. Si querés distinguir el estado activo del inactivo, cambiá color y/o peso/opacidad dentro del MISMO estilo, no el estilo en sí para un solo ítem. Un ícono con tratamiento distinto al resto del set se lee como inconsistencia de sistema, no como jerarquía intencional.
+- Contraste no-textual (WCAG 1.4.11, seed2-002): tratalo como un PRINCIPIO a verificar en cada relleno translúcido que uses, no como una lista cerrada de componentes ya arreglados alguna vez (íconos de acción, tab activo, chips de categoría). Cualquier color con opacidad <100% o "tinte" en su nombre (ej. --marca-10, --marca-28, rgba con alpha bajo) que uses para representar una distinción de datos o estado —una barra de un gráfico, un punto de estado, un borde que codifica "sin actividad" vs. "futuro"— tiene que calcularse contra el fondo real donde se apoya, no asumirse "suficientemente distinto" porque es una versión pálida de un color con sentido. Si un cálculo real de luminancia relativa da menos de 3:1, subí la opacidad, usá el color a saturación completa, o agregá un borde sólido — no dejes pasar el relleno translúcido tal cual.
+- Cualquier elemento que visualmente invite a tocarlo (bordes redondeados de tarjeta/fila, alineación de lista con ícono + texto + valor a la derecha, cursor de mano) necesita un wrapper realmente interactivo (button, a href, o role + tabindex si el framework lo exige) — no lo dejes como li/div sin semántica solo porque en este momento no tiene handler. Si de verdad no es interactivo, quitale las señales visuales de que lo es. Revisá esto para CADA lista de la pantalla, no solo para los botones obvios (acciones rápidas, tabs) — es común dejar afuera justamente la lista de datos (transacciones, actividades, notificaciones), que es la que más se ve tapeable y la que menos wrapper interactivo suele tener.
+
+**Copy:**
+- No uses más de un par de guiones largos (—) en un mismo bloque de copy.
+- Evitá buzzwords de marketing genéricos ("streamline", "empower", "supercharge", "world-class", "enterprise-grade") sin sustento concreto detrás.
+- No repitas la misma idea en label, sublabel, helper text y hint text de un mismo campo — cada uno debe aportar algo distinto o sobra.
+
+**Motion (cuando el skill se use para construir algo con animación):**
+- Evitá puntos de estado con pulso decorativo que simulan actividad en vivo sin que haya nada realmente en vivo.
+- Evitá cursores parpadeantes falsos sobre texto no editable.
+- Evitá marquees de auto-scroll continuo.
+- Evitá easing bounce/elastic en elementos de interfaz — se lee como plantilla, no como producto pulido.
+- Pensá la animación como un momento orquestado (una secuencia de carga, un reveal puntual), no como microinteracciones dispersas sin dirección.
+
+Regla general para usar esta lista: no es una lista de cosas "feas" — son defaults estadísticos. El objetivo es que la decisión visual final sea una elección deliberada para ESTE producto puntual, justificable en una frase, no la salida automática de lo que cualquier modelo generaría para cualquier brief parecido. Si terminaste con una decisión que coincide con algo de esta lista, preguntate si la elegiste a propósito o si fue el camino de menor resistencia — si es lo segundo, cambiala.
+`;
+
+function buildGenerationSkillMarkdown({ criteriaRecords, clientMaterialNote, designTokens }) {
+  const generatedAt = formatDate(Date.now());
+  const criteriaCount = criteriaRecords.length;
+  const isComplete = criteriaCount === EXPECTED_CRITERIA_COUNT;
+  const completenessLine = isComplete
+    ? `✅ Completa: ${criteriaCount}/${EXPECTED_CRITERIA_COUNT} criterios.`
+    : `⚠️ INCOMPLETA: solo ${criteriaCount} de ${EXPECTED_CRITERIA_COUNT} criterios esperados cargaron al generar este export. No tratar como la base completa — recargar y volver a exportar.`;
+
+  // Mismo agrupado por dimensión que el skill de crítica, pero acá cada
+  // línea suma su "component" (cuando existe) para que se pueda filtrar de
+  // un vistazo qué aplica a lo que se está construyendo — la auditoría de
+  // agosto 2026 mostró que la mayoría de "Componentes y affordance" es
+  // sobre selects/combobox/modales/tabs que ni siquiera existen en muchas
+  // pantallas, y mandar los 217 en bloque sin esa señal diluye lo poco que
+  // sí aplica.
+  // Auditoría head-of-product de agosto 2026 (dogfood ciego con un agente sin
+  // contexto, ver AUDIT-skill-de-construccion-head-of-product.md): un dump
+  // plano de 222 líneas sin señal de prioridad hace que lo "core" compita en
+  // igualdad de condiciones con lo opcional en un documento largo — riesgo de
+  // atención desigual documentado en "Lost in the Middle" (Liu et al. 2023,
+  // https://arxiv.org/abs/2307.03172). Ordenamos core:true primero dentro de
+  // cada dimensión para que lo más fundamental no quede mezclado al azar.
+  const byDimension = {};
+  criteriaRecords.forEach((c) => { (byDimension[c.dimension] ||= []).push(c); });
+  const criteriaLines = Object.entries(byDimension)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([dimension, items]) => {
+      const sortedItems = [...items].sort((a, b) => (b.core ? 1 : 0) - (a.core ? 1 : 0));
+      const rows = sortedItems
+        .map((c) => `- ${c.core ? "★ " : ""}${c.statement} _(${c.principle}${c.component ? `, componente: ${c.component}` : ""})_`)
+        .join("\n");
+      return `### ${dimension} (${items.length})\n\n${rows}`;
+    })
+    .join("\n\n");
+
+  const clientMaterialSection = buildClientMaterialSection(clientMaterialNote);
+  const tokensSection = designTokens ? buildTokensMarkdownSection(designTokens) : "";
+
+  return `# With Taste — Skill de construcción (para generar interfaces)
+
+**Versión:** ${CRITERIA_VERSION}
+**Generado:** ${generatedAt}
+**Cobertura de la base de documentación:** ${completenessLine}
+
+> Esta es la skill para CONSTRUIR pantallas nuevas, no para evaluar pantallas existentes —
+> es un documento distinto del "skill de criterio" interno (que corre el equipo para
+> revisar capturas). Usala como usarías cualquier guía de estilo o design system que te
+> pasa un cliente: como contexto para tomar decisiones de diseño, no como un checklist
+> para marcar violaciones después del hecho.
+
+## Cómo pensar esto
+
+Estás en el rol de quien diseña y construye la interfaz, no de quien la audita después. Tu objetivo es un producto que se sienta específico de esta marca y este brief — no la salida más genérica y probable para un pedido parecido. Tomá decisiones deliberadas de paleta, tipografía y layout que puedas justificar en una frase cada una, y arriesgá al menos una decisión de dirección de arte real en vez de quedarte siempre en la opción más segura.
+
+Antes de escribir código: pensá un sistema compacto de color (4-6 valores con nombre y hex), tipografía (roles concretos: display, cuerpo, dato/mono si aplica), y un concepto de layout en una frase. Revisá ese plan contra la lista de anti-patrones de abajo antes de construir — si algo de tu plan coincide con un default de la lista, cambialo ahora, no después.
+
+${GENERIC_AI_SLOP_ANTIPATTERNS}
+
+## Base de criterios de documentación (categoría 1 — ${criteriaCount} registros)
+
+Los mismos criterios curados que usa el evaluador interno, reorganizados para lectura de construcción: agrupados por dimensión, con el componente puntual entre paréntesis cuando aplica. No leas los ${criteriaCount} de punta a punta — andá a las dimensiones que correspondan a lo que estás construyendo (ej. una pantalla con listas de datos → "Componentes y affordance" + "Color y contraste"; un formulario → "Componentes y affordance" + "Copy y microcopy" + "Accesibilidad"; cualquier pantalla → "Jerarquía visual", "Tipografía" y "Espaciado y alineación" siempre aplican). Cuando un criterio menciona un componente específico (select, modal, tabs, etc.) y ese componente no está en lo que estás construyendo, no aplica — no lo fuerces. Los marcados con ★ son "core" — la base los trata como más fundamentales que el resto de su misma dimensión.
+
+${criteriaLines}
+${clientMaterialSection}${tokensSection}
+
+## Antes de terminar — auto-verificación obligatoria (leé esto de nuevo justo antes de entregar)
+
+Esto va al final a propósito, no en el medio: es lo último que tenés fresco antes de decidir que terminaste. No es una repetición decorativa de lo de arriba — es una segunda pasada real sobre tu propio resultado, con la misma lógica de "generá, después revisate con criterio explícito" que usa el motor de crítica de este mismo producto sobre pantallas ajenas (Self-Refine, Madaan et al. 2023, https://arxiv.org/abs/2303.17651). Antes de dar el HTML por definitivo:
+
+1. **Contraste: calculá, no estimes.** Para cada color con opacidad menor a 100% o con "tinte"/nombre de variante pálida que uses para representar una distinción de datos o estado (una barra, un punto, un borde de estado — no una decoración pura), corré mentalmente o de forma explícita la fórmula de luminancia relativa de WCAG contra el fondo real donde se apoya. Los modelos de lenguaje son notoriamente poco confiables haciendo aritmética exacta "a ojo" (PAL, Gao et al. 2023, https://arxiv.org/abs/2211.10435) — no le pidas a tu propio juicio visual algo que ni vos harías sin calculadora. Si no podés calcularlo con certeza, asumí que NO llega a 3:1 y agregá un borde sólido o subí la opacidad.
+2. **Semántica interactiva: releé cada lista de la pantalla.** ¿Hay algún li/div con aspecto de fila tocable (bordes redondeados, ícono + texto + valor, alineación de navegación) que no tenga button, a href o role+tabindex? Es un punto ciego común específicamente en listas de datos (transacciones, actividades, notificaciones) — los botones y tabs "obvios" casi nunca se olvidan, las filas de lista sí.
+3. **Espaciado: medí, no supongas.** ¿El padding interno de cada tarjeta/sección coincide con el margen externo estándar de la pantalla? Un desfase de 1-2px entre componentes hermanos es invisible al escribir el CSS pero se acumula en la percepción de "esto no tiene un sistema".
+4. **Repetición: ¿algún dato aparece dos veces sin agregar nada la segunda vez?** Una leyenda que repite un mapeo color→nombre ya mostrado en cada fila, un gráfico decorativo al lado de una cifra que ya trae su variación en texto — si la segunda aparición no suma información nueva, sacala.
+5. Si algo de los puntos 1-4 te hace dudar, tratá la duda como una señal real, no como paranoia — volvé al criterio o anti-patrón correspondiente arriba y confirmá antes de entregar.
+`;
+}
+
 function buildSkillMarkdown({ corpusCount, latestApproved, criteriaRecords, clientMaterialNote, designTokens }) {
   const generatedAt = formatDate(Date.now());
   const latestBlock = latestApproved
@@ -4108,41 +4401,7 @@ function buildSkillMarkdown({ corpusCount, latestApproved, criteriaRecords, clie
   // adjuntarlo, y cada rol arma su propia sección con su propia instrucción
   // — el rol es lo que determina cómo debe tratarse el archivo, no solo que
   // "está ahí".
-  const clientMaterialSection = clientMaterialNote
-    ? [
-        clientMaterialNote.generalFiles.length || clientMaterialNote.hasNotes
-          ? `\n\n## Material del cliente (descargado junto a este archivo)\n\n` +
-            `Este export vino acompañado de material específico del cliente, descargado por separado junto a este .md —\n` +
-            `no es parte de la base curada general, es contexto puntual para este proyecto. Priorizalo por sobre las\n` +
-            `convenciones genéricas de este documento cuando haya conflicto directo (por ejemplo: el design system del\n` +
-            `cliente define su propio radio de borde o su propia escala tipográfica).\n\n` +
-            clientMaterialNote.generalFiles.map((n) => `- ${n}`).join("\n") +
-            (clientMaterialNote.generalFiles.length ? "\n" : "") +
-            (clientMaterialNote.hasNotes ? `- notas-cliente.txt (notas adicionales escritas a mano)\n` : "")
-          : "",
-        clientMaterialNote.compositionFiles.length
-          ? `\n\n## Composiciones de referencia del cliente (pantallas reales, descargadas junto a este archivo)\n\n` +
-            `Estas son pantallas reales del producto del cliente hoy — ${clientMaterialNote.compositionFiles.map((n) => `\`${n}\``).join(", ")}.\n` +
-            `Sirven para calibrar densidad, tono visual y patrones ya existentes del cliente — NO son una plantilla para\n` +
-            `copiar 1:1.\n\n` +
-            `**Jerarquía de autoridad, en caso de conflicto:**\n` +
-            `1. Los criterios y reglas de este documento (arriba) siguen ganando por sobre lo que se ve en estas\n` +
-            `   pantallas — si el cliente ya tiene un patrón que viola un criterio de la base de documentación, no se\n` +
-            `   copia ese patrón solo porque "así lo tienen hoy".\n` +
-            `2. Como referencia visual (estilo, densidad, tono, componentes reales), estas composiciones pesan MÁS que\n` +
-            `   cualquier pantalla del corpus propio de críticas aprobadas (categoría 3) — son evidencia directa del\n` +
-            `   producto actual de este cliente puntual, no un ejemplo genérico de otro proyecto.\n`
-          : "",
-        clientMaterialNote.logoFiles.length
-          ? `\n\n## Logo del cliente\n\n` +
-            `${clientMaterialNote.logoFiles.map((n) => `\`${n}\``).join(", ")} — es el logo real del cliente, descargado junto a este archivo. Usalo\n` +
-            `tal cual donde haga falta un logo: no lo rediseñes, no generes una versión nueva ni una aproximación. Si\n` +
-            `hace falta el color de marca exacto, sacalo de este archivo (se puede correr "Analizar con IA" sobre él\n` +
-            `para obtener ese token de color) — pesa más que cualquier color inferido de una pantalla del corpus\n` +
-            `propio de críticas.\n`
-          : "",
-      ].join("")
-    : "";
+  const clientMaterialSection = buildClientMaterialSection(clientMaterialNote);
 
   const tokensSection = designTokens ? buildTokensMarkdownSection(designTokens) : "";
 
@@ -4601,6 +4860,39 @@ function SkillExportModal({ onClose, corpusCount, latestApproved, criteriaRecord
     setDownloaded(true);
   };
 
+  // Segundo export, distinto del de arriba: mismo material del cliente y
+  // mismos criterios base, pero con persona de constructor en vez de
+  // evaluador, anti-patrones de "se ve hecho por IA", y los criterios
+  // reorganizados para lectura de construcción (ver
+  // buildGenerationSkillMarkdown). No comparte handler con handleDownload
+  // a propósito — son dos documentos con audiencias distintas, no una
+  // variante del mismo archivo.
+  const handleDownloadGeneration = () => {
+    if (!canDownload) return;
+    const md = buildGenerationSkillMarkdown({
+      criteriaRecords,
+      clientMaterialNote: hasClientMaterial
+        ? {
+            generalFiles: clientFiles.filter((f) => (clientFileRoles[f.name] || "material") === "material").map((f) => f.name),
+            compositionFiles: clientFiles.filter((f) => clientFileRoles[f.name] === "composicion").map((f) => f.name),
+            logoFiles: clientFiles.filter((f) => clientFileRoles[f.name] === "logo").map((f) => f.name),
+            hasNotes: clientNotes.trim().length > 0,
+          }
+        : null,
+      designTokens: hasTokens ? consolidatedTokens : null,
+    });
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadTextFile(`withtaste-skill-construccion-${stamp}.md`, md);
+    clientFiles.forEach((f, i) => {
+      setTimeout(() => downloadBlob(f.name, f), (i + 1) * 200);
+    });
+    if (hasTokens) {
+      const tokensJson = JSON.stringify(buildDesignTokensJson(consolidatedTokens), null, 2);
+      setTimeout(() => downloadBlob(`withtaste-design-tokens-${stamp}.json`, new Blob([tokensJson], { type: "application/json" })), (clientFiles.length + 1) * 200);
+    }
+    setDownloaded(true);
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
@@ -4726,16 +5018,21 @@ function SkillExportModal({ onClose, corpusCount, latestApproved, criteriaRecord
 
         <p className="modal-disclaimer"><Lock size={12} /> Uso interno del equipo — no compartir fuera todavía. El paso siguiente es servir esto desde un servicio propio en vez de un archivo suelto.</p>
 
-        <div className="modal-actions">
+        <div className="modal-actions modal-actions-split">
           <button className="btn btn-secondary" onClick={onClose}>Cerrar</button>
-          <button className="btn btn-primary" onClick={handleDownload} disabled={!canDownload}>
-            <Download size={14} />
-            {loadingCriteria
-              ? "Cargando…"
-              : hasClientMaterial
-                ? `Descargar .md + ${clientFiles.length} archivo${clientFiles.length === 1 ? "" : "s"}${hasTokens ? " + tokens.json" : ""}`
-                : "Descargar .md"}
-          </button>
+          <div className="modal-actions-downloads">
+            <button className="btn btn-secondary" onClick={handleDownloadGeneration} disabled={!canDownload} title="Para construir pantallas nuevas — persona de constructor, anti-patrones de IA genérica, criterios organizados por lectura de construcción">
+              <Download size={14} /> Descargar skill de construcción
+            </button>
+            <button className="btn btn-primary" onClick={handleDownload} disabled={!canDownload} title="Uso interno — el mismo prompt que corre el evaluador, para auditoría">
+              <Download size={14} />
+              {loadingCriteria
+                ? "Cargando…"
+                : hasClientMaterial
+                  ? `Descargar .md + ${clientFiles.length} archivo${clientFiles.length === 1 ? "" : "s"}${hasTokens ? " + tokens.json" : ""}`
+                  : "Descargar .md (interno)"}
+            </button>
+          </div>
         </div>
         {downloaded && (
           <p className="muted small modal-confirm">
@@ -5625,6 +5922,18 @@ function NewView({ onSaved, onSavedBatch, onSavedJourney, onCancel }) {
   const [error, setError] = useState(null);
   const [isJourney, setIsJourney] = useState(false);
   const [journeyTitle, setJourneyTitle] = useState("");
+  // Preview en grande de una captura ya agregada al lote — el thumbnail de
+  // la lista es chico a propósito (para que quepan varias filas), pero
+  // tiene que poder verse completa con un clic antes de mandarla a
+  // analizar.
+  const [previewItem, setPreviewItem] = useState(null);
+
+  useEffect(() => {
+    if (!previewItem) return;
+    const onKey = (e) => { if (e.key === "Escape") setPreviewItem(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewItem]);
 
   const toggleExperienceType = (tag) => {
     setExperienceType((prev) => (prev === tag ? null : tag));
@@ -5956,7 +6265,14 @@ function NewView({ onSaved, onSavedBatch, onSavedJourney, onCancel }) {
                     </div>
                   )}
                   {it.dataUrl ? (
-                    <img src={it.dataUrl} alt="" className="upload-item-thumb" />
+                    <button
+                      type="button"
+                      className="upload-item-thumb-btn"
+                      onClick={() => setPreviewItem(it)}
+                      title="Ver captura completa"
+                    >
+                      <img src={it.dataUrl} alt="" className="upload-item-thumb" />
+                    </button>
                   ) : (
                     <div className="upload-item-thumb upload-item-thumb-empty" />
                   )}
@@ -6046,6 +6362,18 @@ function NewView({ onSaved, onSavedBatch, onSavedJourney, onCancel }) {
           <p className="muted small">Esto queda visible para cualquiera que tenga acceso a este artefacto. El contexto de arriba (tipo de experiencia y consideraciones) se aplica igual a todas las capturas del lote — todavía no hay contexto por pantalla individual.</p>
         </div>
       </div>
+
+      {previewItem && (
+        <div className="image-lightbox-backdrop" onClick={() => setPreviewItem(null)}>
+          <div className="image-lightbox-box" onClick={(e) => e.stopPropagation()}>
+            <button className="icon-btn image-lightbox-close" onClick={() => setPreviewItem(null)} title="Cerrar">
+              <X size={16} />
+            </button>
+            <img src={previewItem.dataUrl} alt={previewItem.title || "Captura"} className="image-lightbox-img" />
+            {previewItem.title && <p className="image-lightbox-caption">{previewItem.title}</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -6548,16 +6876,26 @@ function ScreenshotWithPins({ src, pins, pinning, onPinClick }) {
 
   return (
     <div className={`detail-img-frame ${pinning ? "is-pinning" : ""}`} onClick={handleClick}>
-      <img ref={imgRef} src={src} alt="" className="detail-img" />
-      {pins.map((p) => (
-        <div
-          key={p.key}
-          className={`img-pin img-pin-${p.kind}`}
-          style={{ left: `${p.x}%`, top: `${p.y}%` }}
-        >
-          {p.number != null ? p.number : "+"}
-        </div>
-      ))}
+      {/* .detail-img-wrap se achica exactamente al tamaño renderizado de la imagen
+          (inline-block, sin ancho/alto propio) — por eso los pines, posicionados
+          en % dentro de este wrap, quedan en el mismo sistema de coordenadas que
+          el click (medido contra el rect de la propia <img>). Antes los pines
+          vivían directamente en .detail-img-frame, que se centra con flexbox y
+          casi siempre deja "letterboxing" (espacio vacío) alrededor de la imagen
+          cuando su aspect ratio no coincide con el del marco — eso desalineaba
+          el pin del punto real donde se hizo clic. */}
+      <div className="detail-img-wrap">
+        <img ref={imgRef} src={src} alt="" className="detail-img" />
+        {pins.map((p) => (
+          <div
+            key={p.key}
+            className={`img-pin img-pin-${p.kind}`}
+            style={{ left: `${p.x}%`, top: `${p.y}%` }}
+          >
+            {p.number != null ? p.number : "+"}
+          </div>
+        ))}
+      </div>
       {pinning && <div className="pin-frame-hint">Hacé clic sobre la captura para ubicar</div>}
     </div>
   );
@@ -7600,14 +7938,19 @@ export default function UICritiqueRepo() {
         }
         .upload-items-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
         .upload-item-row {
-          display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--rule);
+          display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--rule);
           border-radius: var(--radius-sm); background: var(--paper-raised);
         }
         .upload-item-row.status-error { border-color: rgba(179, 38, 30, 0.35); }
         .upload-item-row.status-done { border-color: rgba(31, 107, 74, 0.3); }
+        .upload-item-thumb-btn {
+          flex-shrink: 0; padding: 0; border: none; background: none; cursor: zoom-in;
+          border-radius: var(--radius-sm); line-height: 0; transition: opacity 0.12s ease;
+        }
+        .upload-item-thumb-btn:hover { opacity: 0.82; }
         .upload-item-thumb {
-          width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover;
-          flex-shrink: 0; background: var(--paper-sunken); border: 1px solid var(--rule);
+          width: 64px; height: 84px; border-radius: var(--radius-sm); object-fit: cover;
+          flex-shrink: 0; background: var(--paper-sunken); border: 1px solid var(--rule); display: block;
         }
         .upload-item-thumb-empty { display: block; }
         .upload-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -7625,6 +7968,20 @@ export default function UICritiqueRepo() {
         .upload-item-status.status-error { color: var(--danger); }
         .upload-item-status.status-analyzing { color: var(--accent); }
         .upload-item-remove { flex-shrink: 0; }
+        .image-lightbox-backdrop {
+          position: fixed; inset: 0; background: rgba(20, 19, 23, 0.75);
+          display: flex; align-items: center; justify-content: center; padding: 32px; z-index: 60;
+        }
+        .image-lightbox-box { position: relative; max-width: min(92vw, 480px); max-height: 92vh; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .image-lightbox-img {
+          max-width: 100%; max-height: calc(92vh - 40px); width: auto; height: auto;
+          object-fit: contain; border-radius: var(--radius-md); box-shadow: var(--shadow-popover); display: block;
+        }
+        .image-lightbox-caption { color: #fff; font-size: 12.5px; margin: 0; text-align: center; opacity: 0.85; }
+        .image-lightbox-close {
+          position: absolute; top: -14px; right: -14px; background: var(--paper-raised);
+          border: 1px solid var(--rule-strong); box-shadow: var(--shadow-popover);
+        }
         .journey-toggle {
           display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px;
           border: 1px solid var(--rule); border-radius: var(--radius-sm); background: var(--paper-sunken);
@@ -7706,6 +8063,7 @@ export default function UICritiqueRepo() {
           background: var(--paper-sunken); border: 1px solid var(--rule); border-radius: var(--radius-md);
         }
         .detail-img-frame.is-pinning { cursor: crosshair; outline: 2px solid var(--accent); outline-offset: 2px; }
+        .detail-img-wrap { position: relative; display: inline-block; line-height: 0; max-width: 100%; max-height: calc(100vh - 120px); }
         .detail-img { max-width: 100%; max-height: calc(100vh - 120px); width: auto; height: auto; display: block; object-fit: contain; }
         .pin-frame-hint {
           position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
@@ -7894,6 +8252,8 @@ export default function UICritiqueRepo() {
         .token-confidence { font-size: 10px; color: var(--ink-faint); white-space: nowrap; flex-shrink: 0; }
         .token-notes { margin: 2px 0 0; font-style: italic; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+        .modal-actions-split { justify-content: space-between; flex-wrap: wrap; }
+        .modal-actions-downloads { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
         .modal-confirm { text-align: right; margin: 8px 0 0; color: var(--success); }
         .criteria-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
         .score-system-box { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--radius-md); padding: 20px 22px; margin-top: 24px; }
